@@ -1,1 +1,0 @@
-Specify which project file to use because D:\Khóa Luận Cử Nhân\HeThongBanHang\QuanLyBanHangDoAnThucUong (8)\QuanLyBanHangDoAnThucUong contains more than one project file.
