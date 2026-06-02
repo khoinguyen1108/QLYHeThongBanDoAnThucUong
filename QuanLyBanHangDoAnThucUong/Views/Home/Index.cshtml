@@ -1,0 +1,268 @@
+﻿@model IEnumerable<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>
+@using QuanLyBanHangDoAnThucUong.Helpers;
+@{
+    ViewData["Title"] = "Trang chủ - Đặt Đồ Ăn";
+    var cities = ViewBag.Cities as List<string> ?? new List<string>();
+}
+
+<div class="home-container pb-5 pt-4">
+    <div class="container px-md-4">
+        <div class="row">
+            <!-- Gợi ý thông minh (Smart Recommendations) -->
+            @{
+                var recommendedFoods = ViewBag.RecommendedFoods as List<QuanLyBanHangDoAnThucUong.Models.Entities.MonAn>;
+            }
+            @if (recommendedFoods != null && recommendedFoods.Any())
+            {
+                <div class="col-12 mb-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold text-dark m-0"><i class="bi bi-magic text-primary me-2"></i>Gợi ý cho bạn hôm nay</h4>
+                    </div>
+                    <div class="recommendation-scroll-container position-relative">
+                        <!-- Navigation Buttons -->
+                        <button class="btn btn-white border shadow-lg rounded-circle d-none d-md-flex align-items-center justify-content-center position-absolute top-50 start-0 translate-middle-y z-3 btn-nav-recommend" 
+                                id="prevRecommend" style="width: 48px; height: 48px; left: -45px !important;">
+                            <i class="bi bi-chevron-left fs-4"></i>
+                        </button>
+                        <button class="btn btn-white border shadow-lg rounded-circle d-none d-md-flex align-items-center justify-content-center position-absolute top-50 end-0 translate-middle-y z-3 btn-nav-recommend" 
+                                id="nextRecommend" style="width: 48px; height: 48px; right: -45px !important;">
+                            <i class="bi bi-chevron-right fs-4"></i>
+                        </button>
+
+                        <div class="recommendation-wrapper d-flex gap-3 pb-3" id="recommendationList" style="scroll-behavior: smooth; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;">
+                            @foreach (var food in recommendedFoods)
+                            {
+                                var firstVariant = food.BienTheMonAns.FirstOrDefault();
+                                var foodImg = string.IsNullOrEmpty(firstVariant?.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{firstVariant.HinhAnhMonAn}";
+                                var foodSlug = SlugHelper.GenerateSlugOptimal(food.TenMon ?? "mon-an");
+                                
+                                <div class="recommend-item flex-shrink-0" style="width: 240px;">
+                                    <a href="@Url.Action("MonAnDetails", "Home", new { slug = foodSlug, id = food.MaMonAn })" class="text-decoration-none h-100 d-block">
+                                        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden recommend-card">
+                                            <div class="position-relative" style="height: 140px;">
+                                                <img src="@foodImg" class="w-100 h-100 object-fit-cover" alt="@food.TenMon">
+                                                <div class="position-absolute top-0 end-0 m-2">
+                                                    <span class="badge bg-white text-dark shadow-sm rounded-pill py-1">
+                                                        <i class="bi bi-star-fill text-warning me-1"></i>@(food.SoSaoTrungBinh > 0 ? food.SoSaoTrungBinh : 5.0)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <h6 class="fw-bold text-dark mb-1 text-truncate" title="@food.TenMon">@food.TenMon</h6>
+                                                <p class="text-muted small text-truncate mb-2" style="font-size: 0.75rem;"><i class="bi bi-shop me-1"></i>@(food.GianHang?.TenGianHang)</p>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-danger fw-bold">@(firstVariant != null ? String.Format("{0:0,0}đ", firstVariant.GiaBan) : "Hết hàng")</span>
+                                                    <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-fire text-danger me-1"></i>@food.SoLuotBan đã bán</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Left Banner (Desktop only) -->
+            <div class="col-lg-3 d-none d-lg-block mb-4">
+                <div class="position-sticky" style="top: 80px;">
+                    <div class="banner-wrapper rounded-4 overflow-hidden shadow-sm">
+                        <img src="/images/banner/left_banner.jpg" 
+                             class="w-100 rounded-4 shadow-sm" 
+                             style="object-fit: cover; min-height: 480px; display: block;" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                             alt="Left Banner">
+                        <div class="fallback-banner w-100 rounded-4 shadow-sm p-4 text-white text-center flex-column align-items-center justify-content-center" 
+                             style="background: linear-gradient(135deg, #f05023 0%, #ff7e47 100%); min-height: 480px; display: none;">
+                            <div class="bg-white bg-opacity-20 p-3 rounded-circle">
+                                <i class="bi bi-shop fs-1 text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content: Remaining Width -->
+            <div class="col-12 col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="section-title fw-bold text-dark m-0">Danh sách Gian Hàng</h4>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-warning text-center py-5 rounded-4 border-0 shadow-sm">
+                        <i class="bi bi-emoji-frown fs-1 d-block mb-3 text-muted"></i>
+                        <h4 class="fw-bold">Rất tiếc!</h4>
+                        <p>Không tìm thấy quán ăn nào phù hợp với bộ lọc của bạn. Mời bạn thử lại.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 row-cols-xl-3 g-4">
+                        @foreach (var item in Model)
+                        {
+                            var storeSlug = SlugHelper.GenerateSlugOptimal(item.TenGianHang ?? "quan-an-" + item.MaGianHang);
+                            var citySlug = SlugHelper.GenerateSlugOptimal(item.ThanhPho ?? "khac");
+                            
+                            <div class="col">
+                                <a href="@Url.Action("StoreDetails", "Home", new { cityslug = citySlug, storeslug = storeSlug, id = item.MaGianHang })" class="text-decoration-none text-dark h-100 d-block">
+                                    <div class="card h-100 store-card shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+                                        <div class="store-img-wrapper position-relative" style="height: 180px; overflow: hidden;">
+                                            @{ 
+                                                var imgSrc = string.IsNullOrEmpty(item.HinhAnh) ? "/images/default_store.jpg" : $"/images/gianhang/{item.HinhAnh}";
+                                            }
+                                            <img src="@imgSrc" class="card-img-top w-100 h-100 object-fit-cover store-img" alt="@item.TenGianHang">
+                                            
+                                            @if(item.TrangThaiGianHang == "Đã đóng" || item.TrangThaiGianHang == "Tạm ngưng")
+                                            {
+                                                <div class="store-overlay-closed position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(0,0,0,0.6); z-index: 2;">
+                                                    <span class="badge bg-secondary px-3 py-2 fs-6 rounded-pill text-uppercase border border-2 border-white shadow">@item.TrangThaiGianHang</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="card-body p-3 bg-white">
+                                            <h5 class="card-title store-title text-truncate fw-bold mb-2 text-dark" title="@item.TenGianHang">
+                                                <i class="bi bi-patch-check-fill text-success fs-6"></i> @item.TenGianHang
+                                            </h5>
+                                            <p class="card-text store-address text-truncate text-muted mb-1 fs-6" title="@item.DiaChiCuThe, @item.ThanhPho">
+                                                <i class="bi bi-geo-alt"></i> @item.DiaChiCuThe, @item.ThanhPho
+                                            </p>
+                                        </div>
+                                        <div class="card-footer bg-white border-top border-light d-flex justify-content-between align-items-center p-3 pt-2">
+                                            <div class="store-rating d-flex align-items-center">
+                                                <i class="bi bi-star-fill text-warning"></i> 
+                                                <span class="ps-1 fw-bold fs-6">@(item.DanhGiaTB > 0 ? item.DanhGiaTB.Value.ToString("0.0") : "Chưa có")</span>
+                                            </div>
+                                            <div class="store-status">
+                                                @if(item.TrangThaiGianHang == "Mở cửa")
+                                                {
+                                                    <span class="text-success fw-bold" style="font-size: 0.85rem;"><i class="bi bi-circle-fill" style="font-size: 0.5rem; vertical-align: middle;"></i> Mở cửa</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-secondary fw-bold" style="font-size: 0.85rem;"><i class="bi bi-circle-fill" style="font-size: 0.5rem; vertical-align: middle;"></i> Tạm đóng</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Phân trang -->
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav class="mt-5">
+                            <ul class="pagination justify-content-center border-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item mx-1">
+                                        <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center" 
+                                           style="width: 40px; height: 40px;"
+                                           href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, searchString = ViewData["CurrentFilter"], thanhPho = ViewData["CurrentThanhPho"] })">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    if (i == 1 || i == ViewBag.TotalPages || (i >= ViewBag.CurrentPage - 2 && i <= ViewBag.CurrentPage + 2))
+                                    {
+                                        <li class="page-item mx-1 @(i == ViewBag.CurrentPage ? "active" : "")">
+                                            <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center @(i == ViewBag.CurrentPage ? "" : "text-dark bg-white")" 
+                                               style="width: 40px; height: 40px; @(i == ViewBag.CurrentPage ? "background-color: #f05023 !important;" : "")"
+                                               href="@Url.Action("Index", new { page = i, searchString = ViewData["CurrentFilter"], thanhPho = ViewData["CurrentThanhPho"] })">@i</a>
+                                        </li>
+                                    }
+                                    else if (i == 2 || i == ViewBag.TotalPages - 1)
+                                    {
+                                        <li class="page-item disabled mx-1"><span class="page-link border-0 bg-transparent">...</span></li>
+                                    }
+                                }
+
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item mx-1">
+                                        <a class="page-link shadow-sm border-0 rounded-circle d-flex align-items-center justify-content-center" 
+                                           style="width: 40px; height: 40px;"
+                                           href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, searchString = ViewData["CurrentFilter"], thanhPho = ViewData["CurrentThanhPho"] })">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .recommendation-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+    .order-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s ease;
+    }
+    .order-card:hover {
+        background-color: #f8f9fa;
+    }
+    .nav-pills .nav-link.active .tab-badge {
+        color: #198754 !important;
+    }
+    .recommend-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .recommend-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .btn-white {
+        background: white;
+        color: #333;
+    }
+    .btn-white:hover {
+        background: #f8f9fa;
+        color: #f05023;
+    }
+    .btn-nav-recommend {
+        transition: all 0.3s ease !important;
+        opacity: 0.8;
+    }
+    .btn-nav-recommend:hover {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.1) !important;
+        background-color: white !important;
+        color: #f05023 !important;
+        border-color: #f05023 !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const scrollContainer = $('#recommendationList');
+            const scrollStep = 260; // width + gap
+
+            $('#nextRecommend').click(function() {
+                scrollContainer.animate({
+                    scrollLeft: scrollContainer.scrollLeft() + 600
+                }, 500);
+            });
+
+            $('#prevRecommend').click(function() {
+                scrollContainer.animate({
+                    scrollLeft: scrollContainer.scrollLeft() - 600
+                }, 500);
+            });
+        });
+    </script>
+}
+
+

@@ -1,0 +1,278 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<TaiKhoan>
+
+@{
+    ViewData["Title"] = "Quản Lý Tài Khoản";
+    var currentRole = ViewBag.CurrentRole as string ?? "KhachHang";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 fw-bold"><i class="bi bi-person-lines-fill text-primary me-2"></i>Quản Lý Tài Khoản</h2>
+            <div class="badge bg-primary text-white fs-6 px-4 py-2 rounded-pill">
+                Tổng: @ViewBag.TotalCount
+            </div>
+        </div>
+
+        <!-- Role Nav Pills -->
+        <ul class="nav nav-pills mb-4 gap-2">
+            <li class="nav-item">
+                <a class="nav-link @(currentRole == "KhachHang" ? "active" : "") rounded-pill fw-bold" href="/Admin/QuanLyTaiKhoan?role=KhachHang">
+                    Khách Hàng <span class="badge @(currentRole == "KhachHang" ? "bg-white text-primary" : "bg-light text-dark") ms-1">@ViewBag.CountKhachHang</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentRole == "DoiTac" ? "active" : "") rounded-pill fw-bold" href="/Admin/QuanLyTaiKhoan?role=DoiTac">
+                    Đối Tác <span class="badge @(currentRole == "DoiTac" ? "bg-white text-primary" : "bg-light text-dark") ms-1">@ViewBag.CountDoiTac</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(currentRole == "Admin" ? "active" : "") rounded-pill fw-bold" href="/Admin/QuanLyTaiKhoan?role=Admin">
+                    Admin <span class="badge @(currentRole == "Admin" ? "bg-white text-primary" : "bg-light text-dark") ms-1">@ViewBag.CountAdmin</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="row">
+            <!-- Cột trái: Danh sách tài khoản -->
+            <div class="col-md-4 col-lg-3 pe-md-1">
+                <form method="get" action="/Admin/QuanLyTaiKhoan" class="mb-3 p-3 bg-light rounded-3 border">
+                    <input type="hidden" name="role" value="@currentRole" />
+                    
+                    <div class="mb-2">
+                        <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control form-control-sm" placeholder="Tìm tên đăng nhập...">
+                    </div>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <select name="trangThai" class="form-select form-select-sm">
+                                <option value="All" selected="@(ViewBag.CurrentTrangThai == "All" || string.IsNullOrEmpty(ViewBag.CurrentTrangThai))">Tất cả trạng thái</option>
+                                <option value="Hoạt động" selected="@(ViewBag.CurrentTrangThai == "Hoạt động")">Hoạt động</option>
+                                <option value="Bị khóa" selected="@(ViewBag.CurrentTrangThai == "Bị khóa")">Bị khóa</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control form-control-sm" title="Từ ngày">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control form-control-sm" title="Đến ngày">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="/Admin/QuanLyTaiKhoan?role=@currentRole" class="btn btn-sm btn-outline-secondary w-50">Xóa Lọc</a>
+                        <button type="submit" class="btn btn-sm btn-primary w-50"><i class="bi bi-search"></i> Lọc</button>
+                    </div>
+                </form>
+                
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 220px); overflow-y: auto;">
+                    <div class="card-body p-2">
+                        @if (Model.Count == 0)
+                        {
+                            <div class="text-center py-5 text-muted">Không có dữ liệu</div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush border-0">
+                                @foreach (var tk in Model)
+                                {
+                                    <button type="button" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 p-3 custom-card" 
+                                            onclick="loadTaiKhoanDetails(@tk.MaTaiKhoan, this)">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-dark text-truncate">@tk.TenDangNhap</span>
+                                            <span class="badge bg-@(tk.TrangThai == "Hoạt động" ? "success" : "danger") rounded-pill" style="font-size:0.65rem;">@tk.TrangThai</span>
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Phân trang -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="mt-3 d-flex justify-content-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyTaiKhoan" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-searchStr="@ViewBag.SearchStr" asp-route-role="@currentRole">«</a></li>
+                                }
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="QuanLyTaiKhoan" asp-route-page="@i" asp-route-searchStr="@ViewBag.SearchStr" asp-route-role="@currentRole">@i</a>
+                                    </li>
+                                }
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyTaiKhoan" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-searchStr="@ViewBag.SearchStr" asp-route-role="@currentRole">»</a></li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+
+            <!-- Cột phải: Chi tiết tài khoản -->
+            <div class="col-md-8 col-lg-9 ps-md-2 mt-3 mt-md-0">
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 160px);">
+                    <div class="card-body p-4 d-flex flex-column" id="detail-view">
+                        <!-- Trạng thái trống (Chưa chọn) -->
+                        <div class="empty-state text-center m-auto text-muted" id="detail-empty">
+                            <i class="bi bi-shield-lock fs-1 d-block mb-3 opacity-50"></i>
+                            <h5>Chọn một tài khoản để xem chi tiết</h5>
+                        </div>
+                        
+                        <!-- Nội dung chi tiết -->
+                        <div class="detail-content d-none h-100 flex-column" id="detail-content">
+                            <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width:60px; height:60px;">
+                                    <i class="bi bi-person-badge fs-2"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-dark" id="dt-username"></h4>
+                                    <div class="text-muted"><span id="dt-role" class="badge bg-secondary"></span> <span id="dt-trangthai" class="badge bg-success ms-1"></span></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Account Info -->
+                                <div class="col-md-5 border-end mb-4">
+                                    <h5 class="fw-bold text-dark mb-3">Tài Khoản</h5>
+                                    <table class="table table-borderless table-sm">
+                                        <tr><td class="text-muted w-25">Mật khẩu:</td><td><span class="badge bg-light text-dark border">**********</span></td></tr>
+                                        <tr><td class="text-muted">Ngày tạo:</td><td id="dt-ngaytao"></td></tr>
+                                    </table>
+                                </div>
+                                
+                                <!-- Personal Info (Dynamic) -->
+                                <div class="col-md-7 mb-4">
+                                    <h5 class="fw-bold text-dark mb-3">Thông Tin Gắn Kèm</h5>
+                                    <div id="personal-info-container" class="d-none">
+                                        <table class="table table-borderless table-sm">
+                                            <tr><td class="text-muted w-25">Tên:</td><td class="fw-bold text-primary" id="pi-ten"></td></tr>
+                                            <tr><td class="text-muted">SĐT:</td><td id="pi-sdt"></td></tr>
+                                            <tr><td class="text-muted">Email:</td><td id="pi-email"></td></tr>
+                                            <tr><td class="text-muted">Địa chỉ:</td><td id="pi-diachi"></td></tr>
+                                            <tr><td class="text-muted">Thêm:</td><td id="pi-thongtinthem"></td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetRoleBadgeColor(string role)
+    {
+        return role switch
+        {
+            "Admin" => "danger",
+            "DoiTac" => "success",
+            "NhanVien" => "info",
+            "KhachHang" => "primary",
+            _ => "secondary"
+        };
+    }
+}
+
+<style>
+    .custom-card.active {
+        background-color: #e9ecef !important;
+        border-left: 4px solid #0d6efd !important;
+    }
+    .custom-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function loadTaiKhoanDetails(id, elem) {
+            $('.custom-card').removeClass('active');
+            $(elem).addClass('active');
+
+            $('#detail-empty').addClass('d-none');
+            $('#detail-content').removeClass('d-none').addClass('d-flex');
+            
+            $.ajax({
+                url: '/Admin/GetTaiKhoanDetails/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.success) {
+                        // Bind account info
+                        $('#dt-username').text(res.info.username || 'N/A');
+                        $('#dt-role').text(res.info.role || 'N/A');
+                        $('#dt-ngaytao').text(res.info.ngayTao || 'N/A');
+                        $('#dt-trangthai').text(res.info.trangThai || 'N/A');
+                        
+                        let roleBadge = "secondary";
+                        if (res.info.role === "Admin") roleBadge = "danger";
+                        if (res.info.role === "DoiTac") roleBadge = "success";
+                        if (res.info.role === "NhanVien") roleBadge = "info";
+                        if (res.info.role === "KhachHang") roleBadge = "primary";
+                        
+                        $('#dt-role').removeClass().addClass('badge bg-' + roleBadge);
+                        $('#dt-trangthai').removeClass().addClass('badge ms-1 ' + (res.info.trangThai === "Hoạt động" ? "bg-success" : "bg-danger"));
+
+                        // Bind personal/partner info
+                        if (res.personal) {
+                            $('#personal-info-empty').addClass('d-none');
+                            $('#personal-info-container').removeClass('d-none');
+                            $('#pi-ten').text(res.personal.ten || 'N/A');
+                            $('#pi-sdt').text(res.personal.sdt || 'N/A');
+                            $('#pi-email').text(res.personal.email || 'N/A');
+                            $('#pi-diachi').text(res.personal.diaChi || 'N/A');
+                            $('#pi-thongtinthem').text(res.personal.thongTinThem || '');
+                        } else {
+                            $('#personal-info-container').addClass('d-none');
+                            $('#personal-info-empty').removeClass('d-none');
+                        }
+                        
+                        window.currentAccountId = id;
+                        if (res.info.trangThai === 'Hoạt động') {
+                            $('#btn-khoa').removeClass('d-none');
+                            $('#btn-mokhoa').addClass('d-none');
+                            $('#tr-lydohuy').addClass('d-none');
+                        } else {
+                            $('#btn-khoa').addClass('d-none');
+                            $('#btn-mokhoa').removeClass('d-none');
+                            $('#tr-lydohuy').removeClass('d-none');
+                            $('#dt-lydohuy').text(res.info.lyDoHuy || 'Không có lý do');
+                        }
+                    }
+                }
+            });
+        }
+        
+        function lockAccount() {
+            let reason = prompt("Nhập lý do khóa tài khoản:");
+            if (reason != null && reason.trim() !== "") {
+                $.post('/Admin/CapNhatTrangThaiTaiKhoan', { maTaiKhoan: window.currentAccountId, lyDo: reason }, function(res) {
+                    if (res.success) location.reload();
+                    else alert(res.message);
+                });
+            }
+        }
+        
+        function unlockAccount() {
+            if (confirm("Mở khóa tài khoản này?")) {
+                $.post('/Admin/MoKhoaTaiKhoan', { maTaiKhoan: window.currentAccountId }, function(res) {
+                    if (res.success) location.reload();
+                    else alert(res.message);
+                });
+            }
+        }
+    </script>
+}

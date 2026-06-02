@@ -1,0 +1,326 @@
+@model QuanLyBanHangDoAnThucUong.Models.Entities.GioHang
+@{
+    ViewData["Title"] = "Thanh Toán";
+    var khachHang = ViewBag.KhachHang as QuanLyBanHangDoAnThucUong.Models.Entities.KhachHang;
+    var gianHang = Model?.CT_GioHangs.FirstOrDefault()?.BienTheMonAn?.MonAn?.GianHang;
+    decimal tongTien = Model?.CT_GioHangs.Sum(c => c.UocTinhThanhTien) ?? 0;
+}
+
+<div class="bg-light py-5 min-vh-100">
+    <div class="container">
+        <div class="row">
+            <!-- Left Info -->
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Địa Chỉ Giao Hàng</h5>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Người nhận</label>
+                        <input type="text" class="form-control bg-light" value="@khachHang?.TenKH" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Số điện thoại</label>
+                        <input type="text" class="form-control bg-light" value="@khachHang?.SoDTKH" readonly>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small">Thành phố</label>
+                            <select id="thanhPho" class="form-select bg-light" required>
+                                <option value="">Chọn thành phố</option>
+                                <option value="TP.HCM" selected="@(khachHang?.ThanhPho == "TP.HCM")">Hồ Chí Minh</option>
+                                <option value="Hà Nội" selected="@(khachHang?.ThanhPho == "Hà Nội")">Hà Nội</option>
+                                <option value="Đà Nẵng" selected="@(khachHang?.ThanhPho == "Đà Nẵng")">Đà Nẵng</option>
+                                <option value="Bình Dương" selected="@(khachHang?.ThanhPho == "Bình Dương")">Bình Dương</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small">Phường/Xã</label>
+                            <select id="phuongXa" class="form-select bg-light" required>
+                                <option value="">Chọn phường/xã</option>
+                                <option value="Phường Sài Gòn" selected="@(khachHang?.PhuongXa == "Phường Sài Gòn")">Phường Sài Gòn</option>
+                                <option value="Phường Tân Định" selected="@(khachHang?.PhuongXa == "Phường Tân Định")">Phường Tân Định</option>
+                                <option value="Phường Bến Thành" selected="@(khachHang?.PhuongXa == "Phường Bến Thành")">Phường Bến Thành</option>
+                                <option value="Phường Cầu Ông Lãnh" selected="@(khachHang?.PhuongXa == "Phường Cầu Ông Lãnh")">Phường Cầu Ông Lãnh</option>
+                                <option value="Phường Bàn Cờ" selected="@(khachHang?.PhuongXa == "Phường Bàn Cờ")">Phường Bàn Cờ</option>
+                                <option value="Phường Xuân Hòa" selected="@(khachHang?.PhuongXa == "Phường Xuân Hòa")">Phường Xuân Hòa</option>
+                                <option value="Phường Nhiêu Lộc" selected="@(khachHang?.PhuongXa == "Phường Nhiêu Lộc")">Phường Nhiêu Lộc</option>
+                                <option value="Phường Xóm Chiếu" selected="@(khachHang?.PhuongXa == "Phường Xóm Chiếu")">Phường Xóm Chiếu</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Địa chỉ nhận hàng (Số nhà, đường...)</label>
+                        <input type="text" id="diaChiGiaoHang" name="diaChiGiaoHang" class="form-control" value="@khachHang?.DiaChiCuThe" placeholder="Nhập địa chỉ nhận hàng chi tiết..." required>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-credit-card-2-front text-primary me-2"></i>Phương Thức Thanh Toán</h5>
+                    <div class="form-check p-3 border rounded-3 mb-2 bg-white payment-option">
+                        <input class="form-check-input ms-2" type="radio" name="phuongThucThanhToan" id="cash" value="Tiền mặt" checked>
+                        <label class="form-check-label ms-2 fw-medium w-100 d-flex justify-content-between align-items-center cursor-pointer" for="cash">
+                            <span>Thanh toán tiền mặt khi nhận hàng (COD)</span>
+                            <i class="bi bi-cash-stack text-success fs-4"></i>
+                        </label>
+                    </div>
+                    <div class="form-check p-3 border rounded-3 bg-white payment-option">
+                        <input class="form-check-input ms-2" type="radio" name="phuongThucThanhToan" id="wallet" value="Ví điện tử">
+                        <label class="form-check-label ms-2 fw-medium w-100 d-flex justify-content-between align-items-center cursor-pointer" for="wallet">
+                            <span>Thanh toán qua Ví MoMo</span>
+                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" style="height: 30px; object-fit: contain;" />
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Summary -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 rounded-4 p-4 sticky-top" style="top: 20px;">
+                    @{
+                        var groupedItems = Model!.CT_GioHangs.GroupBy(ct => ct.BienTheMonAn?.MonAn?.GianHang).ToList();
+                    }
+                    <h5 class="fw-bold mb-3">Thông Tin Thanh Toán</h5>
+                   @*  <div class="alert alert-warning p-2 border-0 rounded-3 mb-3" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle-fill me-1"></i> Giỏ hàng của bạn có @groupedItems.Count quán. Chúng tôi sẽ tách thành @groupedItems.Count đơn hàng riêng biệt.
+                    </div> *@
+
+                    <div class="order-items mb-3" style="max-height: 400px; overflow-y: auto;">
+                        @foreach (var group in groupedItems)
+                        {
+                            var store = group.Key;
+                            <div class="store-group mb-3 pb-2 border-bottom border-light">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-shop text-success me-2"></i>
+                                    <span class="fw-bold small text-dark">@(store?.TenGianHang ?? "Quán ăn")</span>
+                                </div>
+                                @foreach (var item in group)
+                                {
+                                    <div class="d-flex justify-content-between mb-1 ps-3">
+                                        <div class="small">
+                                            <span class="text-muted">@item.SoLuong x</span>
+                                            <span class="text-muted ms-1 text-truncate d-inline-block" style="max-width: 180px; vertical-align: bottom;">@item.BienTheMonAn?.MonAn?.TenMon</span>
+                                        </div>
+                                        <span class="small fw-medium text-dark">@String.Format("{0:0,0}đ", item.UocTinhThanhTien)</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="discount-section mb-4 border-top pt-3">
+                        <label class="form-label text-dark fw-bold small"><i class="bi bi-tag-fill text-warning me-1"></i>Chọn Mã Giảm Giá</label>
+                        <div class="input-group mb-2">
+                            <select id="voucherSelect" class="form-select">
+                                <option value="0" data-percent="0">-- Chọn mã giảm giá --</option>
+                                @if (ViewBag.KhuyenMais != null)
+                                {
+                                    foreach (var km in (IEnumerable<QuanLyBanHangDoAnThucUong.Models.Entities.ChuongTrinhKhuyenMai>)ViewBag.KhuyenMais)
+                                    {
+                                        <option value="@km.MaKMai" data-percent="@km.PhanTramGiam">@km.TenChTrinh (@km.PhanTramGiam%)</option>
+                                    }
+                                }
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" id="btnApplyVoucher">Áp Dụng</button>
+                        </div>
+                        <span id="voucherStatus" class="small text-muted" style="font-size: 0.75rem;">Vui lòng chọn mã để được giảm giá</span>
+                    </div>
+
+                    <div class="border-top pt-3 mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tạm tính</span>
+                            <span class="fw-medium">@String.Format("{0:0,0}đ", tongTien)</span>
+                        </div>
+                        <div id="discountRow" class="d-flex justify-content-between mb-2" style="display: none !important;">
+                            <span class="text-muted">Giảm giá</span>
+                            <span id="discountDisplay" class="text-success fw-bold">-0đ</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Phí giao hàng (@groupedItems.Count quán)</span>
+                            <span class="text-dark fw-medium" id="shippingFeeDisplay">@String.Format("{0:0,0}đ", ViewBag.TotalShippingFee)</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                            <span class="fw-bold fs-5">Tổng cộng</span>
+                            <span id="finalTotalDisplay" class="fw-bold fs-4 text-danger">@String.Format("{0:0,0}đ", tongTien + (decimal)ViewBag.TotalShippingFee)</span>
+                        </div>
+                    </div>
+
+                    <button id="btnCheckout" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-white shadow-sm fs-5">
+                        Xác Nhận Đặt Hàng
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="@Url.Action("Index", "Cart")" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left"></i> Quay lại giỏ hàng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-option:has(input:checked) {
+        border-color: #0d6efd !important;
+        background-color: #f8fbff !important;
+    }
+    
+    /* Sửa lỗi menu tài khoản bị đè bởi nội dung trang checkout */
+    .dropdown-menu {
+        z-index: 2000 !important;
+    }
+    .bg-light.py-5 {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            var originalTotal = @tongTien.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var shippingFee = @(((decimal)ViewBag.TotalShippingFee).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            var currentDiscount = 0;
+            var selectedVoucherId = null;
+
+            $('#btnApplyVoucher').click(function() {
+                var select = $('#voucherSelect');
+                var selectedOption = select.find('option:selected');
+                var percent = parseFloat(selectedOption.data('percent'));
+                var voucherId = select.val();
+
+                if(voucherId == "0") {
+                    currentDiscount = 0;
+                    selectedVoucherId = null;
+                    $('#voucherStatus').text('Đã hủy áp dụng mã.').attr('class', 'small text-muted');
+                } else {
+                    currentDiscount = (originalTotal * percent) / 100;
+                    selectedVoucherId = voucherId;
+                    $('#voucherStatus').text('Đã áp dụng mã thành công!').attr('class', 'small text-success fw-bold');
+                }
+
+                updateBillDisplay();
+            });
+
+            function updateBillDisplay() {
+                var finalTotal = originalTotal - currentDiscount + shippingFee;
+                $('#discountDisplay').text('-' + currentDiscount.toLocaleString('vi-VN') + 'đ');
+                $('#finalTotalDisplay').text(finalTotal.toLocaleString('vi-VN') + 'đ');
+                
+                if(currentDiscount > 0) {
+                    $('#discountRow').show();
+                } else {
+                    $('#discountRow').hide();
+                }
+            }
+
+            $('#btnCheckout').click(function() {
+                var btn = $(this);
+                var diaChiSoNha = $('#diaChiGiaoHang').val().trim();
+                var phuongXa = $('#phuongXa').val();
+                var thanhPho = $('#thanhPho').val();
+                var phuongThuc = $('input[name="phuongThucThanhToan"]:checked').val();
+
+                if(!thanhPho) {
+                    Swal.fire('Lỗi', 'Vui lòng chọn Thành phố!', 'warning');
+                    $('#thanhPho').focus();
+                    return;
+                }
+                if(!phuongXa) {
+                    Swal.fire('Lỗi', 'Vui lòng chọn Phường/Xã!', 'warning');
+                    $('#phuongXa').focus();
+                    return;
+                }
+                if(!diaChiSoNha) {
+                    Swal.fire('Lỗi', 'Vui lòng nhập địa chỉ nhận hàng!', 'warning');
+                    $('#diaChiGiaoHang').focus();
+                    return;
+                }
+
+                var diaChiFull = diaChiSoNha + ', ' + phuongXa + ', ' + thanhPho;
+                var finalTotal = originalTotal - currentDiscount + shippingFee;
+
+                if (phuongThuc === 'Ví điện tử') {
+                    Swal.fire({
+                        title: 'Thanh toán qua Ví MoMo',
+                        html: `
+                            <div class="text-center mb-3">
+                                <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" style="width: 80px; margin-bottom: 15px;" />
+                                <h4 class="text-danger fw-bold">${finalTotal.toLocaleString('vi-VN')}đ</h4>
+                                <p class="text-muted small">Vui lòng quét mã QR hoặc chuyển khoản đến SĐT: <strong>0123456789</strong></p>
+                            </div>
+                            <div class="form-group text-start">
+                                <label class="small fw-bold mb-1">Nhập số tiền bạn đã chuyển khoản để hệ thống xác nhận:</label>
+                                <input type="number" id="momoAmount" class="form-control form-control-lg" placeholder="Ví dụ: ${finalTotal}" />
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Đã chuyển khoản',
+                        cancelButtonText: 'Hủy',
+                        confirmButtonColor: '#a50064',
+                        preConfirm: () => {
+                            const amount = document.getElementById('momoAmount').value;
+                            if (!amount) {
+                                Swal.showValidationMessage('Vui lòng nhập số tiền đã chuyển khoản');
+                                return false;
+                            }
+                            if (parseFloat(amount) < finalTotal) {
+                                Swal.showValidationMessage('Số tiền chưa chuyển đủ và cần chuyển lại.');
+                                return false;
+                            }
+                            return true;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Chuyển khoản thành công!',
+                                text: 'Hệ thống đã ghi nhận thanh toán MoMo của bạn.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                submitOrder(diaChiFull, phuongThuc, btn);
+                            });
+                        }
+                    });
+                } else {
+                    submitOrder(diaChiFull, phuongThuc, btn);
+                }
+            });
+
+            function submitOrder(diaChiFull, phuongThuc, btn) {
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
+
+                $.ajax({
+                    url: '/Cart/ProcessCheckout',
+                    type: 'POST',
+                    data: {
+                        diaChiGiaoHang: diaChiFull,
+                        phuongThucThanhToan: phuongThuc,
+                        maKM: selectedVoucherId,
+                        selectedItems: '@ViewBag.SelectedItemsIds'
+                    },
+                    success: function(res) {
+                        if(res.success) {
+                            Swal.fire({
+                                title: 'Đặt hàng thành công!',
+                                text: 'Đơn hàng của bạn đã được đặt thành công và đang chờ xác nhận.',
+                                icon: 'success',
+                                confirmButtonColor: '#f05023',
+                                allowOutsideClick: false
+                            }).then(() => {
+                                window.location.href = '/Home/Index'; // Redirect to home or Order history
+                            });
+                        } else {
+                            btn.prop('disabled', false).html('Xác Nhận Đặt Hàng');
+                            Swal.fire('Thất bại', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).html('Xác Nhận Đặt Hàng');
+                        Swal.fire('Lỗi', 'Có lỗi hệ thống.', 'error');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+

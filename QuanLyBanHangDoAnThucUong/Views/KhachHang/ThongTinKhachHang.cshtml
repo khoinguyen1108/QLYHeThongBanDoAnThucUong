@@ -1,0 +1,115 @@
+@model QuanLyBanHangDoAnThucUong.Models.ViewModels.ThongTinKhachHangViewModel
+
+@{
+    ViewData["Title"] = "Hồ Sơ Của Tôi";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <!-- Sidebar Menu Khách Hàng -->
+        @await Html.PartialAsync("_KhachHangSidebar")
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h4 class="fw-bold mb-4 border-bottom pb-3"><i class="bi bi-person-vcard text-primary me-2"></i>Thông Tin Cá Nhân</h4>
+                    
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form method="post" action="/khachhang/chinh-sua-ho-so">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenKH" class="form-label fw-bold text-muted"></label>
+                                <input class="form-control bg-light" asp-for="TenKH" required>
+                                <span asp-validation-for="TenKH" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SoDienThoai" class="form-label fw-bold text-muted"></label>
+                                <input type="tel" class="form-control bg-light" asp-for="SoDienThoai" required>
+                                <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-bold text-muted"></label>
+                            <input type="email" class="form-control bg-light" asp-for="Email" required>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="GioiTinh" class="form-label fw-bold text-muted"></label>
+                                <select class="form-select bg-light" asp-for="GioiTinh" required>
+                                    <option value="">Chọn giới tính...</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                                <span asp-validation-for="GioiTinh" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ThanhPho" class="form-label fw-bold text-muted"></label>
+                                <select asp-for="ThanhPho" class="form-select bg-light" required>
+                                    <option value="">Chọn thành phố...</option>
+                                    <option value="TP.HCM">Hồ Chí Minh</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Bình Dương">Bình Dương</option>
+                                    <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                </select>
+                                <span asp-validation-for="ThanhPho" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PhuongXa" class="form-label fw-bold text-muted"></label>
+                                <select asp-for="PhuongXa" class="form-select bg-light" required>
+                                    <option value="">Chọn Phường/Xã...</option>
+                                    @if(ViewBag.PhuongXas != null)
+                                    {
+                                        foreach(var px in ViewBag.PhuongXas)
+                                        {
+                                            <option value="@px">@px</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="PhuongXa" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="DiaChi" class="form-label fw-bold text-muted"></label>
+                            <input class="form-control bg-light" asp-for="DiaChi" placeholder="Số nhà, tên đường..." required>
+                            <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 mt-5 border-bottom pb-2"><i class="bi bi-shield-lock text-danger me-2"></i>Đổi Mật Khẩu <span class="fs-6 fw-normal text-muted fst-italic">(Bỏ trống nếu không muốn đổi)</span></h5>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="MatKhauCu" class="form-label fw-bold text-muted"></label>
+                                <input type="password" class="form-control bg-light" asp-for="MatKhauCu">
+                                <span asp-validation-for="MatKhauCu" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MatKhauMoi" class="form-label fw-bold text-muted"></label>
+                                <input type="password" class="form-control bg-light" asp-for="MatKhauMoi">
+                                <span asp-validation-for="MatKhauMoi" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="XacNhanMatKhauMoi" class="form-label fw-bold text-muted"></label>
+                                <input type="password" class="form-control bg-light" asp-for="XacNhanMatKhauMoi">
+                                <span asp-validation-for="XacNhanMatKhauMoi" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="text-end mt-2">
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm">
+                                Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </form></div></div></div></div></div>

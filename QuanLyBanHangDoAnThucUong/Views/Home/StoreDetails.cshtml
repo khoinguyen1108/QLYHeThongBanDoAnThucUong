@@ -1,0 +1,426 @@
+@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
+@using QuanLyBanHangDoAnThucUong.Helpers;
+@{
+    ViewData["Title"] = Model.TenGianHang;
+    var menuItems = ViewBag.MenuItems as List<IGrouping<QuanLyBanHangDoAnThucUong.Models.Entities.TheLoaiMonAn, QuanLyBanHangDoAnThucUong.Models.Entities.MonAn>>;
+    var similarStores = ViewBag.SimilarStores as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+
+    // Logic for "Favorite Store"
+    bool isFavorite = false;
+    if (Model.DanhGiaTB > 0)
+    {
+        isFavorite = Model.DanhGiaTB >= 4.5m;
+    }
+}
+
+<div class="store-detail-container pb-5 bg-light min-vh-100 py-4">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none text-primary"><i class="bi bi-house-door-fill"></i> Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home", new { thanhPho = Model.ThanhPho })" class="text-decoration-none text-primary">@Model.ThanhPho</a></li>
+                <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">@Model.TenGianHang</li>
+            </ol>
+        </nav>
+
+        <!-- Header Store Info -->
+        <div class="card shadow-sm border-0 mb-4 rounded-4 overflow-hidden store-header-card bg-white">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-4 col-lg-3 text-center mb-4 mb-md-0 position-relative">
+                        @{ 
+                            var storeImgSrc = string.IsNullOrEmpty(Model.HinhAnh) ? "/images/default_store.jpg" : $"/images/gianhang/{Model.HinhAnh}";
+                        }
+                        <img src="@storeImgSrc" alt="@Model.TenGianHang" class="img-fluid rounded-4 shadow-sm object-fit-cover w-100" style="height: 220px;">
+                        @if(Model.TrangThaiGianHang == "Đã đóng" || Model.TrangThaiGianHang == "Tạm ngưng")
+                        {
+                            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center rounded-4 mx-2" style="background: rgba(0,0,0,0.5); left: 0; width: calc(100% - 1.5rem) !important;">
+                                <span class="badge bg-secondary px-3 py-2 fs-5">TẠM NGHỈ</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-8 col-lg-9 ps-md-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-danger text-white me-2 py-1 px-2 mb-1"><i class="bi bi-check-circle-fill"></i> Đối tác</span>
+                            @if (isFavorite)
+                            {
+                                <span class="badge bg-primary text-white me-3 py-1 px-2 mb-1"><i class="bi bi-heart-fill"></i> Quán Ưa Thích</span>
+                            }
+                        </div>
+                        <h2 class="store-name fw-bold mb-3 text-dark">@Model.TenGianHang</h2>
+                        <p class="text-muted mb-2 fs-6"><i class="bi bi-geo-alt-fill text-danger"></i> @Model.DiaChiCuThe, @Model.ThanhPho</p>
+                        
+                        <div class="d-flex align-items-center mb-3 text-muted">
+                            <div class="me-4"><i class="bi bi-clock border rounded-circle p-1 bg-light"></i> @Model.GioMo - @Model.GioDong</div>
+                            <div class="me-4"><i class="bi bi-tag text-success"></i> Có mã giảm giá</div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mt-4">
+                            <div class="product-count-box me-4 border-end pe-4 text-center">
+                                <span class="fs-4 fw-bold text-primary"><i class="bi bi-box-seam"></i> @(Model.MonAns?.Count ?? 0)</span>
+                                <div class="text-muted small">Sản phẩm</div>
+                            </div>
+                            <div class="rating-box me-4 border-end pe-4 text-center">
+                                <span class="fs-4 fw-bold text-warning"><i class="bi bi-star-fill"></i> @(Model.DanhGiaTB > 0 ? Model.DanhGiaTB.Value.ToString("0.0") : "N/A")</span>
+                                <div class="text-muted small">Đánh giá chung</div>
+                            </div>
+                            <div class="status-box text-center ps-2">
+                                @if(Model.TrangThaiGianHang == "Mở cửa")
+                                {
+                                    <h5 class="text-success fw-bold mb-0"><i class="bi bi-circle-fill" style="font-size:0.6rem"></i> Đang mở cửa</h5>
+                                    <div class="text-muted small">Có thể đặt hàng</div>
+                                }
+                                else
+                                {
+                                    <h5 class="text-secondary fw-bold mb-0"><i class="bi bi-x-circle-fill"></i> Đã đóng cửa</h5>
+                                    <div class="text-muted small">Hẹn bạn dịp khác</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Section -->
+        <div class="row layout-shopee layout-menu pt-3">
+            <!-- Sidebar Categories -->
+            <div class="col-md-3 d-none d-md-block">
+                <div class="menu-sidebar sticky-top" style="top: 20px; z-index: 10;">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                            <h5 class="fw-bold m-0"><i class="bi bi-list-ul text-primary"></i> THỰC ĐƠN</h5>
+                        </div>
+                        <div class="list-group list-group-flush" id="list-example">
+                            @if (menuItems != null)
+                            {
+                                @foreach (var group in menuItems)
+                                {
+                                    var categoryId = "cat-" + group.Key?.MaLoaiMon;
+                                    <a class="list-group-item list-group-item-action py-3 fw-medium border-light d-flex justify-content-between align-items-center" href="#@categoryId">
+                                        <span>@(group.Key?.TenLoai ?? "Khác")</span>
+                                        <span class="badge bg-light text-dark rounded-pill">@(group.Sum(m => m.BienTheMonAns.Count))</span>
+                                    </a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Content: Menu Items -->
+            <div class="col-md-6 px-md-3 position-relative">
+                <div class="search-menu-box mb-4 sticky-top bg-white p-3 shadow-sm rounded-4" style="top: 20px; z-index: 10;">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-0 bg-light shadow-none" placeholder="Tìm món ăn trong thực đơn...">
+                    </div>
+                </div>
+
+                <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="120" class="menu-list-container scrollspy-example" tabindex="0">
+                    @if (menuItems != null && menuItems.Any())
+                    {
+                        @foreach (var group in menuItems)
+                        {
+                            var categoryId = "cat-" + group.Key?.MaLoaiMon;
+                            <div id="@categoryId" class="menu-category mb-5 bg-white p-4 rounded-4 shadow-sm pt-4" style="scroll-margin-top: 110px;">
+                                <h4 class="category-title mb-4 fw-bold pb-2 border-bottom border-2 border-primary d-inline-block text-dark">
+                                    @(group.Key?.TenLoai ?? "Khác")
+                                </h4>
+                                
+                                <div class="row row-cols-1 g-4 pt-2">
+                                    @foreach (var monAn in group)
+                                    {
+                                        @foreach (var bienThe in monAn.BienTheMonAns)
+                                        {
+                                            <div class="col">
+                                                <a href="/mon-an/@(SlugHelper.GenerateSlugOptimal(monAn.TenMon ?? "mon-an"))-@monAn.MaMonAn" class="text-decoration-none text-dark d-block h-100">
+                                                    <div class="card h-100 border border-light shadow-sm food-item-card flex-row align-items-center p-3 rounded-4 bg-white">
+                                                        <div class="food-img-container me-3 text-center position-relative overflow-hidden rounded-3" style="width: 110px; height: 110px; flex-shrink: 0;">
+                                                            @{ 
+                                                                var foodImgSrc = string.IsNullOrEmpty(bienThe.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{bienThe.HinhAnhMonAn}";
+                                                            }
+                                                            <img src="@foodImgSrc" alt="@monAn.TenMon" class="img-fluid object-fit-cover w-100 h-100">
+                                                        </div>
+                                                        <div class="food-info flex-grow-1 d-flex flex-column h-100">
+                                                            <h6 class="food-title fw-bold text-dark mb-1 lh-base">@monAn.TenMon</h6>
+                                                            @if (monAn.SoLuotDanhGia > 0)
+                                                            {
+                                                                <div class="text-dark small mb-2 fw-bold d-flex align-items-center">
+                                                                    @(monAn.SoSaoTrungBinh?.ToString("0.#") ?? "0") <i class="bi bi-star-fill text-warning ms-1"></i>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="text-muted small mb-2 fst-italic">
+                                                                    Chưa có đánh giá
+                                                                </div>
+                                                            }
+
+                                                            <p class="food-desc text-muted mb-2 small" title="@bienThe.MoTaMonAn" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.8em;">
+                                                                @bienThe.MoTaMonAn
+                                                            </p>
+                                                            
+                                                            <div class="mt-auto d-flex justify-content-between align-items-center w-100">
+                                                                <div class="price-container">
+                                                                    <span class="food-price fw-bold text-primary fs-5">@String.Format("{0:0,0}đ", bienThe.GiaBan)</span>
+                                                                </div>
+                                                                <button type="button" class="btn btn-primary rounded-circle shadow-sm d-flex justify-content-center align-items-center text-white btn-add-cart position-relative" data-variant-id="@bienThe.MaBienThe" style="width: 38px; height: 38px; padding: 0; z-index: 5;" title="Thêm vào giỏ">
+                                                                    <i class="bi bi-plus-lg fs-5 pointer-events-none"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                            <i class="bi bi-cart-x text-muted" style="font-size: 5rem; opacity: 0.5;"></i>
+                            <h4 class="mt-4 fw-bold text-secondary">Chưa có thực đơn</h4>
+                            <p class="text-muted">Gian hàng này đang cập nhật danh sách món ăn, bạn vui lòng quay lại sau nhé.</p>
+                            <a asp-action="Index" class="btn btn-outline-primary rounded-pill px-4 mt-3">Xem gian hàng khác</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Similar Stores -->
+            <div class="col-md-3 d-none d-lg-block">
+                <div class="similar-stores-sidebar sticky-top" style="top: 20px; z-index: 10;">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                            <h5 class="fw-bold m-0"><i class="bi bi-shop text-success"></i> GỢI Ý GIAN HÀNG</h5>
+                        </div>
+                        <div class="card-body px-3 pt-2">
+                            @if (similarStores != null && similarStores.Any())
+                            {
+                                @foreach (var store in similarStores)
+                                {
+                                    var storeSlug = SlugHelper.GenerateSlugOptimal(store.TenGianHang ?? "quan-an-" + store.MaGianHang);
+                                    var citySlug = SlugHelper.GenerateSlugOptimal(store.ThanhPho ?? "khac");
+                                    var imgSrc = string.IsNullOrEmpty(store.HinhAnh) ? "/images/default_store.jpg" : $"/images/gianhang/{store.HinhAnh}";
+                                    
+                                    <a href="@Url.Action("StoreDetails", "Home", new { cityslug = citySlug, storeslug = storeSlug, id = store.MaGianHang })" class="text-decoration-none">
+                                        <div class="d-flex mb-3 align-items-center store-suggestion-item p-2 rounded-3">
+                                            <img src="@imgSrc" class="rounded-3 object-fit-cover shadow-sm bg-light" style="width: 60px; height: 60px; min-width: 60px;" alt="@store.TenGianHang">
+                                            <div class="ms-3 overflow-hidden">
+                                                <h6 class="text-dark fw-bold mb-1 text-truncate" title="@store.TenGianHang">@store.TenGianHang</h6>
+                                                <p class="text-muted small mb-0 text-truncate"><i class="bi bi-geo-alt"></i> @store.DiaChiCuThe</p>
+                                                <div class="text-warning small mt-1">
+                                                    <i class="bi bi-star-fill"></i> @(store.DanhGiaTB > 0 ? store.DanhGiaTB.Value.ToString("0.0") : "Mới")
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted small text-center mb-0 mt-3">Chưa có gợi ý nào khu vực này.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #list-example .list-group-item {
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    #list-example .list-group-item:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+        padding-left: 1.25rem !important;
+    }
+
+    #list-example .list-group-item.active {
+        background-color: #e7f1ff !important;
+        color: #0d6efd !important;
+        border-left-color: #0d6efd;
+        font-weight: 700 !important;
+    }
+
+    #list-example .list-group-item.active .badge {
+        background-color: #0d6efd !important;
+        color: white !important;
+    }
+
+    .food-item-card {
+        transition: box-shadow 0.2s;
+    }
+
+    .food-item-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .pointer-events-none {
+        pointer-events: none;
+    }
+
+    /* Tùy chỉnh thông báo thêm giỏ hàng */
+    .small-toast {
+        font-size: 0.85rem !important;
+        padding: 0.25rem 0.5rem !important;
+        min-height: 40px !important;
+        border-radius: 50px !important;
+        width: auto !important;
+        margin-bottom: 20px !important;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const listItems = document.querySelectorAll('#list-example .list-group-item');
+            
+            listItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    // Remove active class from all items
+                    listItems.forEach(i => i.classList.remove('active'));
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                });
+            });
+
+            // Smooth scroll for menu categories
+            document.querySelectorAll('#list-example a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Real-time Search functionality for Food Items
+            const searchInput = document.querySelector('.search-menu-box input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const term = e.target.value.toLowerCase().trim();
+                    const foodCards = document.querySelectorAll('.food-item-card');
+                    const categories = document.querySelectorAll('.menu-category');
+
+                    // 1. Filter Food Items
+                    foodCards.forEach(card => {
+                        const title = card.querySelector('.food-title').textContent.toLowerCase();
+                        const desc = card.querySelector('.food-desc').textContent.toLowerCase();
+                        const col = card.closest('.col');
+                        
+                        if (term === "" || title.includes(term) || desc.includes(term)) {
+                            col.style.display = 'block';
+                        } else {
+                            col.style.display = 'none';
+                        }
+                    });
+
+                    // 2. Filter Categories (hide category if no items are visible)
+                    categories.forEach(cat => {
+                        const items = cat.querySelectorAll('.col');
+                        let hasVisible = false;
+                        items.forEach(item => {
+                            if (item.style.display !== 'none') {
+                                hasVisible = true;
+                            }
+                        });
+
+                        if (hasVisible) {
+                            cat.style.display = 'block';
+                        } else {
+                            cat.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // Handle Add to Cart
+            document.querySelectorAll('.btn-add-cart').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const variantId = this.getAttribute('data-variant-id');
+                    
+                    addToCart(variantId, 1, false);
+                });
+            });
+
+            function addToCart(variantId, quantity, forceClear) {
+                $.ajax({
+                    url: '/Cart/AddToCart',
+                    type: 'POST',
+                    data: {
+                        maBienThe: variantId,
+                        soLuong: quantity,
+                        forceClear: forceClear
+                    },
+                    success: function(response) {
+                        if(response.requireLogin) {
+                            window.location.href = '/Account/DangNhap';
+                            return;
+                        }
+
+                        if(response.requireConfirmation) {
+                            Swal.fire({
+                                title: 'Thông báo giỏ hàng',
+                                text: response.message,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#f05023',
+                                cancelButtonColor: '#6c757d',
+                                confirmButtonText: 'Đồng ý xoá và Thêm mới',
+                                cancelButtonText: 'Hủy'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    addToCart(variantId, quantity, true); // retry with forceClear
+                                }
+                            });
+                            return;
+                        }
+
+                        if(response.success) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'bottom-center',
+                                icon: 'success',
+                                title: response.message,
+                                showConfirmButton: false,
+                                timer: 1500,
+                                customClass: {
+                                    popup: 'small-toast'
+                                }
+                            });
+                            // Update badge in layout
+                            if(typeof updateCartCount === "function") {
+                                updateCartCount();
+                            }
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Lỗi', 'Có lỗi xảy ra khi kết nối đến máy chủ.', 'error');
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+

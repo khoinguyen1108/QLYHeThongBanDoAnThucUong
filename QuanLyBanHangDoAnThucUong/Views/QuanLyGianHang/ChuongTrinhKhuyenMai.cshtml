@@ -1,0 +1,322 @@
+﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
+
+@{
+    ViewData["Title"] = "Quản Lý Khuyến Mãi";
+    var vouchers = ViewBag.Vouchers as List<QuanLyBanHangDoAnThucUong.Models.Entities.ChuongTrinhKhuyenMai> ?? new List<QuanLyBanHangDoAnThucUong.Models.Entities.ChuongTrinhKhuyenMai>();
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <!-- Main Content Header -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #198754 0%, #12b886 100%);">
+            <div class="card-body p-4 text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1"><i class="bi bi-gift me-2"></i>Quản Lý Khuyến Mãi</h3>
+                        <p class="mb-0" style="color: rgba(255,255,255,0.9);">Tạo và quản lý các mã giảm giá cho gian hàng của bạn.</p>
+                    </div>
+                    <button class="btn btn-light text-success fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#khuyenMaiModal" onclick="openModal(null)">
+                        <i class="bi bi-plus-circle me-1"></i> Tạo khuyến mãi mới
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+            <div class="card-body p-4">
+                <form method="get" action="/QuanLyGianHang/ChuongTrinhKhuyenMai" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">Tìm Tên Khuyến Mãi</label>
+                        <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control rounded-3 border-0 bg-light" placeholder="Nhập tên...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">Từ ngày</label>
+                        <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control rounded-3 border-0 bg-light">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">Đến ngày</label>
+                        <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control rounded-3 border-0 bg-light">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">Sắp xếp (Phần Trăm)</label>
+                        <select name="sortOrder" class="form-select rounded-3 border-0 bg-light">
+                            <option value="" selected="@(string.IsNullOrEmpty((string)ViewBag.SortOrder))">Mới nhất</option>
+                            <option value="desc" selected="@((string)ViewBag.SortOrder == "desc")">Phần trăm cao đến thấp</option>
+                            <option value="asc" selected="@((string)ViewBag.SortOrder == "asc")">Phần trăm thấp đến cao</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
+                        <a href="/QuanLyGianHang/ChuongTrinhKhuyenMai" class="btn btn-light rounded-pill px-4">Xóa lọc</a>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm"><i class="bi bi-funnel"></i> Lọc dữ liệu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-3">Tên Khuyến Mãi</th>
+                                <th>Mã Giảm Giá</th>
+                                <th class="text-center">Giảm (%)</th>
+                                <th>Điều Kiện</th>
+                                <th>Loại</th>
+                                <th>Trạng Thái</th>
+                                <th class="text-end pe-4">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!vouchers.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                                        Gian hàng chưa có khuyến mãi nào.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in vouchers)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold">@item.TenChTrinh</td>
+                                        <td><span class="badge bg-warning text-dark border px-2 py-1 fs-6">@item.NoiDungKMai</span></td>
+                                        <td class="text-center fw-bold text-danger">@item.PhanTramGiam%</td>
+                                        <td>Đơn từ @String.Format("{0:N0}đ", item.GiamToiDa)</td>
+                                        <td>
+                                            @if (item.NgayKetThuc > DateTime.Now)
+                                            {
+                                                <span class="badge bg-info-subtle text-info rounded-pill">1 lần/khách</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">Nhiều lần</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.TrangThaiKMai == "Còn đang trong thời gian" || item.TrangThaiKMai == "Mới nhất")
+                                            {
+                                                <span class="badge bg-success">Đang hoạt động</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Hết hạn/Khóa</span>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-outline-primary rounded-circle me-1" title="Sửa" 
+                                                    onclick="openModal({
+                                                        id: @item.MaKMai, 
+                                                        ten: '@item.TenChTrinh', 
+                                                        ma: '@item.NoiDungKMai', 
+                                                        phanTram: @item.PhanTramGiam, 
+                                                        dieuKien: @item.GiamToiDa, 
+                                                        ngayBatDau: '@(item.NgayBatDau.ToString("yyyy-MM-dd"))', 
+                                                        ngayKetThuc: '@(item.NgayKetThuc.ToString("yyyy-MM-dd"))', 
+                                                        suDung1Lan: '@(item.SuDung1Lan.ToString().ToLower())',
+                                                        TrangThaiKMai: '@item.TrangThaiKMai'
+                                                    })">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger rounded-circle" title="Xóa" onclick="deleteKM(@item.MaKMai)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Khuyen Mai -->
+<div class="modal fade" id="khuyenMaiModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTitle">Thêm Khuyến Mãi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="frmKhuyenMai">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="kmId" name="MaKMai" value="0" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên khuyến mãi <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-3" id="kmTen" name="TenChTrinh" required placeholder="VD: Giảm giá hè 2026">
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Mã giảm giá <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" id="kmMa" name="NoiDungKMai" required style="text-transform: uppercase;" placeholder="VD: SUMMER20">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Giảm (%) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control rounded-3" id="kmPhanTram" name="PhanTramGiam" min="1" max="100" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Điều kiện áp dụng (Giá trị đơn hàng tối thiểu) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control rounded-start-3" id="kmDieuKien" name="GiamToiDa" min="0" required>
+                            <span class="input-group-text rounded-end-3 border-start-0">VNĐ</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Từ ngày <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control rounded-3" id="kmNgayBatDau" name="NgayBatDau" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Đến ngày <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control rounded-3" id="kmNgayKetThuc" name="NgayKetThuc" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Loại sử dụng</label>
+                            <select class="form-select rounded-3" id="kmSuDung1Lan" name="SuDung1Lan">
+                                <option value="true">1 lần / 1 khách</option>
+                                <option value="false">Sử dụng nhiều lần</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Trạng thái</label>
+                            <select class="form-select rounded-3" id="kmTrangThai" name="TrangThaiKMai">
+                                <option value="Còn đang trong thời gian">Kích hoạt</option>
+                                <option value="Đã hết thời gian sử dụng">Hết hạn / Khóa</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">Lưu khuyến mãi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var myModal = new bootstrap.Modal(document.getElementById('khuyenMaiModal'));
+
+        function openModal(data) {
+            if (data) {
+                $('#modalTitle').text('Cập Nhật Khuyến Mãi');
+                $('#kmId').val(data.id);
+                $('#kmTen').val(data.ten);
+                $('#kmMa').val(data.ma);
+                $('#kmPhanTram').val(data.phanTram);
+                $('#kmDieuKien').val(data.dieuKien);
+                $('#kmNgayBatDau').val(data.ngayBatDau);
+                $('#kmNgayKetThuc').val(data.ngayKetThuc);
+                $('#kmSuDung1Lan').val(data.suDung1Lan);
+                $('#kmTrangThai').val(data.TrangThaiKMai);
+            } else {
+                $('#modalTitle').text('Thêm Khuyến Mãi');
+                $('#frmKhuyenMai')[0].reset();
+                $('#kmId').val(0);
+            }
+            myModal.show();
+        }
+
+        $('#frmKhuyenMai').submit(function (e) {
+            e.preventDefault();
+            
+            var isUpdate = $('#kmId').val() != '0';
+            var url = isUpdate ? '/QuanLyGianHang/UpdateKhuyenMai' : '/QuanLyGianHang/CreateKhuyenMai';
+            
+            var formData = JSON.stringify({
+                MaKMai: parseInt($('#kmId').val()),
+                TenChTrinh: $('#kmTen').val(),
+                NoiDungKMai: $('#kmMa').val(),
+                PhanTramGiam: parseFloat($('#kmPhanTram').val()),
+                GiamToiDa: parseFloat($('#kmDieuKien').val()),
+                NgayBatDau: $('#kmNgayBatDau').val(),
+                NgayKetThuc: $('#kmNgayKetThuc').val(),
+                SuDung1Lan: $('#kmSuDung1Lan').val() === 'true',
+                TrangThaiKMai: $('#kmTrangThai').val()
+            });
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                contentType: 'application/json',
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi', res.message || 'Có lỗi xảy ra', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ', 'error');
+                }
+            });
+        });
+
+        function deleteKM(id) {
+            Swal.fire({
+                title: 'Xóa khuyến mãi?',
+                text: "Khuyến mãi này sẽ bị xóa khỏi gian hàng của bạn!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/QuanLyGianHang/DeleteKhuyenMai',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Đã xóa',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Lỗi', res.message, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}
+
+
+
+
+
+

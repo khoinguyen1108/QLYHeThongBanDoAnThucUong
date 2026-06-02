@@ -1,0 +1,227 @@
+﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.DoiTac
+@{
+    ViewData["Title"] = "Chi Tiết Đối Tác - " + Model.TenQuanDoiTac;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var donHangs = ViewBag.DonHangs as List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>;
+    var danhGias = ViewBag.DanhGias as List<QuanLyBanHangDoAnThucUong.Models.Entities.DanhGiaMonAn>;
+    var gianHangs = ViewBag.GianHangs as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+    int? selectedBranchId = ViewBag.SelectedBranchId;
+}
+
+<div style="margin-left: 250px; margin-top: 20px;" class="pb-5">
+    <div class="container-fluid px-4">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="/Admin/QuanLyDoiTac" class="btn btn-link text-decoration-none text-muted p-0 mb-2">
+                    <i class="bi bi-arrow-left"></i> Quay lại Danh sách Đối tác
+                </a>
+                <h2 class="fw-bold text-dark mb-0">@Model.TenQuanDoiTac</h2>
+                <div class="text-muted mt-1">
+                    <i class="bi bi-telephone me-1"></i> @Model.SoDTDoiTac | 
+                    <i class="bi bi-envelope me-1"></i> @Model.EmailDTac |
+                    <i class="bi bi-person me-1"></i> Tài khoản: @Model.TaiKhoan?.TenDangNhap
+                </div>
+            </div>
+            <div>
+                @if (Model.TrangThaiDoiTac == "Còn đang hoạt động")
+                {
+                    <span class="badge bg-success px-3 py-2 rounded-pill fs-6"><i class="bi bi-check-circle"></i> Đang hoạt động</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger px-3 py-2 rounded-pill fs-6"><i class="bi bi-lock"></i> Đã bị khóa</span>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 bg-white sticky-top" style="top: 80px;">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                        <h6 class="fw-bold text-dark mb-0">Lọc theo Chi nhánh</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="/Admin/ChiTietDoiTac/@Model.MaDoiTac" 
+                               class="list-group-item list-group-item-action border-0 rounded mb-1 @(!selectedBranchId.HasValue ? "active bg-primary text-white" : "")">
+                                <i class="bi bi-buildings me-2"></i> Tất cả chi nhánh
+                            </a>
+                            
+                            @foreach (var gh in gianHangs)
+                            {
+                                <a href="/Admin/ChiTietDoiTac/@Model.MaDoiTac?branchId=@gh.MaGianHang" 
+                                   class="list-group-item list-group-item-action border-0 rounded mb-1 @(selectedBranchId == gh.MaGianHang ? "active bg-primary text-white" : "")">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-truncate" style="max-width: 150px;">
+                                            <i class="bi bi-shop me-2"></i> @gh.TenGianHang
+                                        </span>
+                                        @if (gh.TrangThaiGianHang == "Mở cửa")
+                                        {
+                                            <span class="badge bg-success rounded-pill" style="font-size: 0.6rem;">ON</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary rounded-pill" style="font-size: 0.6rem;">OFF</span>
+                                        }
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <!-- Tabs -->
+                <ul class="nav nav-pills mb-4 shadow-sm bg-white rounded-pill p-1 d-inline-flex" id="detailTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab">
+                            <i class="bi bi-receipt me-1"></i> Đơn hàng gần đây
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4" id="reviews-tab" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab">
+                            <i class="bi bi-star-fill text-warning me-1"></i> Đánh giá
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="detailTabsContent">
+                    <!-- Tab Đơn hàng -->
+                    <div class="tab-pane fade show active" id="orders" role="tabpanel">
+                        <div class="card border-0 shadow-sm rounded-4 bg-white">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4">Mã ĐH</th>
+                                                <th>Khách hàng</th>
+                                                <th>Chi nhánh</th>
+                                                <th>Ngày tạo</th>
+                                                <th>Tổng tiền</th>
+                                                <th>Trạng thái</th>
+                                                <th>Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (!donHangs.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-5 text-muted">Không có đơn hàng nào</td>
+                                                </tr>
+                                            }
+                                            @foreach (var d in donHangs)
+                                            {
+                                                <tr>
+                                                    <td class="ps-4 fw-bold">#@d.MaDonHang</td>
+                                                    <td>
+                                                        <div class="fw-bold">@d.KhachHang?.TenKH</div>
+                                                        <div class="small text-muted">@d.SoDienThoaiNhan</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border"><i class="bi bi-shop text-primary"></i> @d.GianHang?.TenGianHang</span>
+                                                    </td>
+                                                    <td>@d.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td class="fw-bold text-success">@d.ThanhTienKhachTra.ToString("N0")đ</td>
+                                                    <td>
+                                                        @if (d.TrangThaiDonHang == "Hoàn thành")
+                                                        {
+                                                            <span class="badge bg-success rounded-pill">Hoàn thành</span>
+                                                        }
+                                                        else if (d.TrangThaiDonHang == "Đã hủy")
+                                                        {
+                                                            <span class="badge bg-danger rounded-pill">Đã hủy</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-warning text-dark rounded-pill">@d.TrangThaiDonHang</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <a href="/Admin/ChiTietDonHang/@d.MaDonHang" class="btn btn-sm btn-outline-info rounded-pill" title="Chi tiết đơn hàng"><i class="bi bi-eye"></i></a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Đánh giá -->
+                    <div class="tab-pane fade" id="reviews" role="tabpanel">
+                        <div class="card border-0 shadow-sm rounded-4 bg-white">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4">Khách hàng</th>
+                                                <th>Món ăn</th>
+                                                <th>Chi nhánh</th>
+                                                <th>Số sao</th>
+                                                <th>Nội dung</th>
+                                                <th>Ngày ĐG</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (!danhGias.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="6" class="text-center py-5 text-muted">Không có đánh giá nào</td>
+                                                </tr>
+                                            }
+                                            @foreach (var r in danhGias)
+                                            {
+                                                <tr>
+                                                    <td class="ps-4">
+                                                        <div class="fw-bold">@r.KhachHang?.TenKH</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold text-truncate" style="max-width: 150px;" title="@r.MonAn?.TenMon">@r.MonAn?.TenMon</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark border"><i class="bi bi-shop text-primary"></i> @r.MonAn?.GianHang?.TenGianHang</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-warning text-dark rounded-pill">
+                                                            @r.SoSao <i class="bi bi-star-fill text-dark"></i>
+                                                        </span>
+                                                    </td>
+                                                    <td style="max-width: 200px;">
+                                                        <div class="text-truncate" title="@r.NoiDung">@r.NoiDung</div>
+                                                    </td>
+                                                    <td class="text-muted small">@r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-pills .nav-link {
+        color: #6c757d;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+        color: #fff;
+        background-color: #0d6efd;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+</style>
+
+

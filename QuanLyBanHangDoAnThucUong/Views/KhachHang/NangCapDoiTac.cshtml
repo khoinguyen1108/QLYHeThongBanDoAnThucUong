@@ -1,0 +1,170 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@using QuanLyBanHangDoAnThucUong.Models.ViewModels
+@model NangCapDoiTacViewModel
+
+@{
+    ViewData["Title"] = "Nâng Cấp Thành Đối Tác";
+    var khachHang = ViewBag.KhachHang as KhachHang;
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4 fw-bold">
+                        📈 Nâng Cấp Thành Đối Tác
+                    </h3>
+
+                    <!-- Thông tin khách hàng hiện tại -->
+                    @if (khachHang != null)
+                    {
+                        <div class="alert alert-info">
+                            <h5>ℹ️ Thông Tin Tài Khoản Hiện Tại</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Email:</strong> @khachHang.EmailKH</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Số Điện Thoại:</strong> @(khachHang.SoDTKH ?? "Chưa cập nhật")</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <hr />
+
+                    <!-- Form Nâng Cấp -->
+                    <form method="post" novalidate>
+                                            <div class="alert alert-warning">
+                        <h5>⚠️ Đọc Điều Lệ Trước Khi Nâng Cấp</h5>
+                        <p>Vui lòng chọn và đọc kỹ điều lệ gian hàng trước khi nâng cấp:</p>
+
+                        <div class="mb-3">
+                            <label for="MaDieuLe" class="form-label fw-bold">Chọn Điều Lệ:</label>
+                            <select class="form-control" asp-for="MaDieuLe" required>
+                                <option value="">-- Chọn Điều Lệ --</option>
+                                @if (ViewBag.DieuLes != null)
+                                {
+                                    @foreach (var dl in (List<DieuLe>) ViewBag.DieuLes)
+                                    {
+                                        <option value="@dl.MaDieuLe">
+                                            @dl.TenDieuLe - Chiết khấu: @dl.PhiChietKhau%
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="MaDieuLe" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" asp-for="DaXacNhanDieuLe" required>
+                            <label class="form-check-label" asp-for="DaXacNhanDieuLe">
+                                Tôi đã đọc và đồng ý với điều lệ gian hàng
+                            </label>
+                            <span asp-validation-for="DaXacNhanDieuLe" class="text-danger small d-block"></span>
+                        </div>
+                    </div>
+
+                        <h5 class="mb-3">📍 Thông Tin Gian Hàng</h5>
+
+                        <!-- Section 1: Thông tin cửa hàng -->
+                        <div class="mb-3">
+                            <label asp-for="TenQuanDoiTac" class="form-label fw-bold"></label>
+                            <input class="form-control" asp-for="TenQuanDoiTac"
+                                   placeholder="Tên cửa hàng của bạn" required>
+                            <span asp-validation-for="TenQuanDoiTac" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TenGianHang" class="form-label fw-bold"></label>
+                            <input class="form-control" asp-for="TenGianHang"
+                                   placeholder="Tên gian hàng" required>
+                            <span asp-validation-for="TenGianHang" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Section 2: Thông tin liên hệ (auto-fill từ KhachHang) -->
+                        <h6 class="mb-3 border-bottom pb-2">📞 Thông Tin Liên Hệ</h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SoDTDoiTac" class="form-label fw-bold"></label>
+                                <input type="tel" class="form-control" asp-for="SoDTDoiTac"
+                                       placeholder="Số điện thoại" required>
+                                @* <small class="text-muted">Tự động từ thông tin tài khoản</small> *@
+                                <span asp-validation-for="SoDTDoiTac" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EmailDTac" class="form-label fw-bold"></label>
+                                <input type="email" class="form-control" asp-for="EmailDTac"
+                                       placeholder="Email liên hệ" required>
+                                @* <small class="text-muted">Tự động từ thông tin tài khoản</small> *@
+                                <span asp-validation-for="EmailDTac" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Địa chỉ -->
+                        <h6 class="mb-3 border-bottom pb-2">📍 Địa Chỉ</h6>
+
+                        <div class="mb-3">
+                            <label asp-for="DiaChiDoiTac" class="form-label fw-bold"></label>
+                            <input class="form-control" asp-for="DiaChiDoiTac"
+                                   placeholder="Địa chỉ cửa hàng" required>
+                            @* <small class="text-muted">Tự động từ địa chỉ thường trú</small> *@
+                            <span asp-validation-for="DiaChiDoiTac" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DiaChiCuThe" class="form-label fw-bold"></label>
+                            <input class="form-control" asp-for="DiaChiCuThe"
+                                   placeholder="Địa chỉ gian hàng (có thể khác với cửa hàng)" required>
+                            <span asp-validation-for="DiaChiCuThe" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Section 4: Giờ hoạt động -->
+                        <h6 class="mb-3 border-bottom pb-2">⏰ Giờ Hoạt Động</h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="GioMo" class="form-label fw-bold"></label>
+                                <input type="time" class="form-control" asp-for="GioMo" required>
+                                <span asp-validation-for="GioMo" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="GioDong" class="form-label fw-bold"></label>
+                                <input type="time" class="form-control" asp-for="GioDong" required>
+                                <span asp-validation-for="GioDong" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+                        {
+                            <div class="alert alert-danger mt-3">
+                                <strong>❌ Lỗi:</strong>
+                                <ul class="mb-0 mt-2">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold">
+                                ✅ Nâng Cấp Thành Đối Tác
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                ❌ Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

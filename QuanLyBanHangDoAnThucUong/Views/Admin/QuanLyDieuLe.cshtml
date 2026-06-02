@@ -1,0 +1,250 @@
+@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<DieuLe>
+
+@{
+    ViewData["Title"] = "Quản Lý Điều Lệ";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2 class="fw-bold">📋 Quản Lý Điều Lệ</h2>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#themDieuLeModal">
+                    ➕ Thêm Điều Lệ Mới
+                </button>
+            </div>
+        </div>
+
+        
+        <div class="card shadow-sm mb-4 border-0 rounded-4">
+            <div class="card-body">
+                <form method="get" action="/Admin/QuanLyDieuLe" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Tìm Tên Điều Lệ</label>
+                        <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control" placeholder="Nhập tên...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Từ ngày</label>
+                        <input type="date" name="tuNgay" value="@ViewBag.TuNgay" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Đến ngày</label>
+                        <input type="date" name="denNgay" value="@ViewBag.DenNgay" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Sắp xếp (Phí Chiết Khấu)</label>
+                        <select name="sortOrder" class="form-select">
+                            <option value="desc_date" selected="@((string)ViewBag.SortOrder == "desc_date" || string.IsNullOrEmpty((string)ViewBag.SortOrder))">Mới nhất</option>
+                            <option value="asc" selected="@((string)ViewBag.SortOrder == "asc")">Thấp đến cao</option>
+                            <option value="desc" selected="@((string)ViewBag.SortOrder == "desc")">Cao đến thấp</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <a href="/Admin/QuanLyDieuLe" class="btn btn-outline-secondary w-50">Xóa Lọc</a>
+                        <button type="submit" class="btn btn-primary w-50"><i class="bi bi-funnel"></i> Lọc</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body">
+                @if (Model.Count == 0)
+                {
+                    <div class="alert alert-info text-center">
+                        <p>Chưa có điều lệ nào</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Tên Điều Lệ</th>
+                                <th>Phí Chiết Khấu (%)</th>
+                                <th>Chi Tiết</th>
+                                <th>Ngày Tạo</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dieuLe in Model)
+                            {
+                                <tr>
+                                    <td>@dieuLe.MaDieuLe</td>
+                                    <td><strong>@dieuLe.TenDieuLe</strong></td>
+                                    <td>
+                                        <span class="badge bg-primary">@dieuLe.PhiChietKhau%</span>
+                                    </td>
+                                    <td>@dieuLe.ChiTietDieuLe</td>
+                                    <td>@dieuLe.NgayThemDieuLe.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                                data-bs-target="#suaDieuLeModal"
+                                                onclick="setSuaDieuLe(@dieuLe.MaDieuLe, '@dieuLe.TenDieuLe', @dieuLe.PhiChietKhau, '@dieuLe.ChiTietDieuLe')">
+                                            ✏️ Sửa
+                                        </button>
+                                        <button class="btn btn-sm btn-danger"
+                                                onclick="if(confirm('Bạn có chắc muốn xóa?')) { deleteDieuLe(@dieuLe.MaDieuLe); }">
+                                            🗑️ Xóa
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Điều Lệ -->
+<div class="modal fade" id="themDieuLeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">➕ Thêm Điều Lệ Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formThemDieuLe">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Điều Lệ</label>
+                        <input type="text" class="form-control" id="tenDieuLe" placeholder="Nhập tên điều lệ" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Phí Chiết Khấu (%)</label>
+                        <input type="number" class="form-control" id="phiChietKhau" placeholder="15" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chi Tiết Điều Lệ</label>
+                        <textarea class="form-control" id="chiTietDieuLe" placeholder="Mô tả chi tiết" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success" onclick="themDieuLe()">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Điều Lệ -->
+<div class="modal fade" id="suaDieuLeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Sửa Điều Lệ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formSuaDieuLe">
+                <div class="modal-body">
+                    <input type="hidden" id="maDieuLe">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Điều Lệ</label>
+                        <input type="text" class="form-control" id="tenDieuLeSua" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Phí Chiết Khấu (%)</label>
+                        <input type="number" class="form-control" id="phiChietKhauSua" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Chi Tiết Điều Lệ</label>
+                        <textarea class="form-control" id="chiTietDieuLeSua" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning" onclick="suaDieuLe()">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function themDieuLe() {
+        const data = {
+            TenDieuLe: document.getElementById('tenDieuLe').value,
+            PhiChietKhau: parseFloat(document.getElementById('phiChietKhau').value),
+            ChiTietDieuLe: document.getElementById('chiTietDieuLe').value
+        };
+
+        fetch('/Admin/ThemDieuLe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Thêm thành công!');
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+
+    function setSuaDieuLe(maDieuLe, tenDieuLe, phiChietKhau, chiTietDieuLe) {
+        document.getElementById('maDieuLe').value = maDieuLe;
+        document.getElementById('tenDieuLeSua').value = tenDieuLe;
+        document.getElementById('phiChietKhauSua').value = phiChietKhau;
+        document.getElementById('chiTietDieuLeSua').value = chiTietDieuLe;
+    }
+
+    function suaDieuLe() {
+        const data = {
+            MaDieuLe: parseInt(document.getElementById('maDieuLe').value),
+            TenDieuLe: document.getElementById('tenDieuLeSua').value,
+            PhiChietKhau: parseFloat(document.getElementById('phiChietKhauSua').value),
+            ChiTietDieuLe: document.getElementById('chiTietDieuLeSua').value
+        };
+
+        fetch('/Admin/SuaDieuLe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Sửa thành công!');
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+
+    function deleteDieuLe(maDieuLe) {
+        fetch('/Admin/XoaDieuLe?maDieuLe=' + maDieuLe, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Xóa thành công!');
+                location.reload();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+</script>
+
+<style>
+    body {
+        overflow-x: hidden;
+    }
+</style>

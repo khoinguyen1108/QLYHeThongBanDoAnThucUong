@@ -1,0 +1,215 @@
+﻿@{
+    ViewData["Title"] = "Đánh Giá Gian Hàng";
+    var tot = ViewBag.Tot as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+    var trungBinh = ViewBag.TrungBinh as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+    var kem = ViewBag.Kem as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+
+    var tabs = new[] {
+        new { Id = "tot", Title = "Tốt (4-5 sao)", List = tot, BadgeClass = "bg-success" },
+        new { Id = "trungbinh", Title = "Khá/Trung bình (3-3.9 sao)", List = trungBinh, BadgeClass = "bg-warning text-dark" },
+        new { Id = "kem", Title = "Cần cải thiện (Dưới 3 sao)", List = kem, BadgeClass = "bg-danger" }
+    };
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0"><i class="bi bi-star-fill text-warning me-2"></i>Đánh Giá Gian Hàng</h2>
+            <form method="get" action="/Admin/DanhGiaGianHang" class="d-flex" style="width: 350px;">
+                <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden bg-white border">
+                    <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control border-0 px-3 shadow-none" placeholder="Tìm tên gian hàng...">
+                    @if (!string.IsNullOrEmpty(ViewBag.SearchStr))
+                    {
+                        <a href="/Admin/DanhGiaGianHang" class="btn btn-white border-0 text-muted d-flex align-items-center bg-white"><i class="bi bi-x-circle-fill"></i></a>
+                    }
+                    <button type="submit" class="btn btn-warning border-0 px-3"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Pills Navigation -->
+        <ul class="nav nav-pills mb-4 gap-2" id="rating-tabs" role="tablist">
+            @for (int i = 0; i < tabs.Length; i++)
+            {
+                var tab = tabs[i];
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(i == 0 ? "active" : "") rounded-pill fw-bold" 
+                            id="tab-@tab.Id" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#pane-@tab.Id" 
+                            type="button" role="tab">
+                        @tab.Title
+                        <span class="badge @tab.BadgeClass ms-1">@tab.List.Count</span>
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content" id="rating-tabsContent">
+            @for (int i = 0; i < tabs.Length; i++)
+            {
+                var tab = tabs[i];
+                <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="pane-@tab.Id" role="tabpanel">
+                    
+                    <div class="row">
+                        <!-- Danh sách gian hàng (Master) -->
+                        <div class="col-md-5 col-lg-4 pe-md-1">
+                            <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 220px); overflow-y: auto;">
+                                <div class="card-body p-2">
+                                    @if (!tab.List.Any())
+                                    {
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="bi bi-shop fs-1 d-block mb-2"></i>
+                                            <small>Không có gian hàng nào trong nhóm này.</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="list-group list-group-flush border-0">
+                                            @foreach (var item in tab.List)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 p-3 store-card" 
+                                                        onclick="showStoreDetail('@item.MaGianHang', '@tab.Id')">
+                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                        <span class="fw-bold text-dark text-truncate" style="max-width: 70%;">@item.TenGianHang</span>
+                                                        <span class="badge @tab.BadgeClass"><i class="bi bi-star-fill me-1"></i>@item.DanhGiaTB</span>
+                                                    </div>
+                                                    <div class="small text-muted"><i class="bi bi-person me-1"></i>Đối tác: @(item.DoiTac?.TenQuanDoiTac ?? "N/A")</div>
+                                                </button>
+
+                                                <!-- Dữ liệu ẩn -->
+                                                <div id="detail-data-@tab.Id-@item.MaGianHang" class="d-none">
+                                                    <div class="data-ten">@item.TenGianHang</div>
+                                                    <div class="data-doitac">@(item.DoiTac?.TenQuanDoiTac ?? "N/A")</div>
+                                                    <div class="data-sdt">@(item.DoiTac?.SoDTDoiTac ?? "N/A")</div>
+                                                    <div class="data-diachi">@item.DiaChiCuThe</div>
+                                                    <div class="data-gio">@item.GioMo.ToString(@"hh\:mm") - @item.GioDong.ToString(@"hh\:mm")</div>
+                                                    <div class="data-danhgia">@item.DanhGiaTB</div>
+                                                    <div class="data-trangthai">@item.TrangThaiGianHang</div>
+                                                    <div class="data-badgeclass">@tab.BadgeClass</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <!-- Phân trang -->
+                            @if (ViewBag.TotalPages > 1)
+                            {
+                                <div class="mt-3 d-flex justify-content-center">
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            @if (ViewBag.CurrentPage > 1)
+                                            {
+                                                <li class="page-item"><a class="page-link" asp-action="DanhGiaGianHang" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-searchStr="@ViewBag.SearchStr">«</a></li>
+                                            }
+                                            @for (int j = 1; j <= ViewBag.TotalPages; j++)
+                                            {
+                                                <li class="page-item @(j == ViewBag.CurrentPage ? "active" : "")">
+                                                    <a class="page-link" asp-action="DanhGiaGianHang" asp-route-page="@j" asp-route-searchStr="@ViewBag.SearchStr">@j</a>
+                                                </li>
+                                            }
+                                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                            {
+                                                <li class="page-item"><a class="page-link" asp-action="DanhGiaGianHang" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-searchStr="@ViewBag.SearchStr">»</a></li>
+                                            }
+                                        </ul>
+                                    </nav>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Chi tiết gian hàng (Detail) -->
+                        <div class="col-md-7 col-lg-8 ps-md-2 mt-3 mt-md-0">
+                            <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 220px);">
+                                <div class="card-body p-0 d-flex flex-column" id="detail-view-@tab.Id">
+                                    <!-- Trạng thái trống -->
+                                    <div class="empty-state text-center m-auto text-muted">
+                                        <i class="bi bi-star-half fs-1 d-block mb-3 opacity-50"></i>
+                                        <p>Chọn một gian hàng để xem chi tiết</p>
+                                    </div>
+                                    
+                                    <!-- Nội dung chi tiết -->
+                                    <div class="detail-content d-none p-4 h-100 flex-column">
+                                        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                                            <h4 class="fw-bold mb-0 text-primary detail-ten"></h4>
+                                            <div class="detail-rating badge fs-5 px-3 py-2 rounded-pill"></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="text-muted small">Đối tác quản lý</div>
+                                                <div class="fw-bold fs-5 detail-doitac"></div>
+                                                <div class="detail-sdt text-muted"></div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="text-muted small">Trạng thái</div>
+                                                <div class="fw-bold detail-trangthai mt-1"></div>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <div class="text-muted small">Địa chỉ gian hàng</div>
+                                                <div class="fw-medium detail-diachi"></div>
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <div class="text-muted small">Giờ hoạt động</div>
+                                                <div class="fw-medium detail-gio"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-auto pt-3 border-top">
+                                            <a href="/Admin/QuanLyDoiTac" class="btn btn-outline-primary rounded-pill px-4"><i class="bi bi-arrow-right-circle me-2"></i>Đi tới Quản lý đối tác</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .store-card.active {
+        background-color: #f8f9fa !important;
+        border-left: 4px solid #ffc107 !important;
+    }
+    .store-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s ease;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showStoreDetail(storeId, tabId) {
+            // Remove active from all cards in this tab
+            $(`#pane-${tabId} .store-card`).removeClass('active');
+            // Add active to clicked card
+            $(`#pane-${tabId} .store-card[onclick="showStoreDetail('${storeId}', '${tabId}')"]`).addClass('active');
+
+            const dataContainer = $(`#detail-data-${tabId}-${storeId}`);
+            const viewContainer = $(`#detail-view-${tabId}`);
+
+            viewContainer.find('.empty-state').addClass('d-none');
+            const content = viewContainer.find('.detail-content');
+            content.removeClass('d-none').addClass('d-flex');
+
+            content.find('.detail-ten').text(dataContainer.find('.data-ten').text());
+            content.find('.detail-doitac').text(dataContainer.find('.data-doitac').text());
+            content.find('.detail-sdt').text(dataContainer.find('.data-sdt').text());
+            content.find('.detail-diachi').text(dataContainer.find('.data-diachi').text());
+            content.find('.detail-gio').text(dataContainer.find('.data-gio').text());
+
+            const badgeClass = dataContainer.find('.data-badgeclass').text();
+            const rating = dataContainer.find('.data-danhgia').text();
+            content.find('.detail-rating').removeClass().addClass(`detail-rating badge fs-5 px-3 py-2 rounded-pill ${badgeClass}`).html(`<i class="bi bi-star-fill me-1"></i>${rating}`);
+
+            const trangThai = dataContainer.find('.data-trangthai').text();
+            let ttBadge = trangThai === "Đang mở cửa" ? "success" : "danger";
+            content.find('.detail-trangthai').html(`<span class="badge bg-${ttBadge}">${trangThai}</span>`);
+        }
+    </script>
+}
+
+

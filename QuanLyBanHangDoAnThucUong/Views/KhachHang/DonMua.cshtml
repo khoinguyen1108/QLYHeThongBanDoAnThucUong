@@ -1,0 +1,291 @@
+@using QuanLyBanHangDoAnThucUong.Helpers
+@model List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>
+@{
+    ViewData["Title"] = "Đơn Mua Của Tôi";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "all";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <!-- Sidebar Khách Hàng -->
+        @await Html.PartialAsync("_KhachHangSidebar")
+
+        <div class="col-md-9">
+            <!-- Tabs Lọc Trạng Thái Đơn Mua (Shopee Style) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-0">
+                    <ul class="nav nav-pills nav-fill bg-white rounded-4" style="border-bottom: 2px solid #f1f3f5; font-size: 15px;">
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "all" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "all" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=all">Tất cả</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "cho-xac-nhan" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "cho-xac-nhan" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=cho-xac-nhan">Chờ xác nhận</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "da-xac-nhan" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "da-xac-nhan" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=da-xac-nhan">Đã xác nhận</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "dang-chuan-bi" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "dang-chuan-bi" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=dang-chuan-bi">Đang chuẩn bị</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "dang-giao" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "dang-giao" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=dang-giao">Đang giao</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "hoan-thanh" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "hoan-thanh" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=hoan-thanh">Hoàn thành</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link py-3 rounded-0 @(currentStatus == "da-huy" ? "active fw-bold border-bottom border-primary border-3" : "text-dark")" 
+                               style="@(currentStatus == "da-huy" ? "background: transparent; color: #0d6efd !important;" : "")" 
+                               href="/khachhang/don-mua?status=da-huy">Đã hủy</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Danh Sách Đơn Mua -->
+            @if (Model == null || !Model.Any())
+            {
+                <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                    <div class="card-body py-5">
+                        <i class="bi bi-cart-x text-muted" style="font-size: 80px; opacity: 0.5;"></i>
+                        <h5 class="text-muted mt-3 fw-bold">Chưa có đơn hàng nào</h5>
+                        <p class="text-muted small">Hãy tiếp tục khám phá và mua sắm những món ăn ngon miệng nhé.</p>
+                        <a href="/" class="btn btn-primary rounded-pill px-4 mt-2">Tiếp tục mua sắm</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var donHang in Model)
+                {
+                    <div class="card border-0 shadow-sm rounded-4 mb-4 order-card overflow-hidden">
+                        <!-- Card Header -->
+                        <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-danger rounded-pill me-2 px-3 py-2"><i class="bi bi-shop me-1"></i> Gian hàng</span>
+                                <h6 class="mb-0 fw-bold fs-6">
+                                    <a href="/Home/StoreDetails?id=@donHang.GianHang?.MaGianHang" class="text-dark text-decoration-none">
+                                        @donHang.GianHang?.TenGianHang <i class="bi bi-chevron-right ms-1 small"></i>
+                                    </a>
+                                </h6>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-uppercase fw-bold @(donHang.TrangThaiDonHang == "Hoàn thành" ? "text-success" : donHang.TrangThaiDonHang == "Đã hủy" || donHang.TrangThaiDonHang == "Từ chối" ? "text-danger" : "text-warning")">
+                                    <i class="bi @(donHang.TrangThaiDonHang == "Hoàn thành" ? "bi-check-circle-fill" : donHang.TrangThaiDonHang == "Đã hủy" ? "bi-x-circle-fill" : "bi-clock-fill") me-1"></i>
+                                    @donHang.TrangThaiDonHang
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body (Items) -->
+                        <div class="card-body p-4">
+                            @foreach (var item in donHang.ChiTietDonHangs)
+                            {
+                                <div class="d-flex align-items-center mb-3 pb-3 @(item != donHang.ChiTietDonHangs.Last() ? "border-bottom" : "")">
+                                    <img src="@(string.IsNullOrEmpty(item.BienTheMonAn?.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{item.BienTheMonAn.HinhAnhMonAn}")" 
+                                         alt="@item.BienTheMonAn?.MonAn?.TenMon" 
+                                         class="rounded-3 me-3 border shadow-sm" 
+                                         style="width: 80px; height: 80px; object-fit: cover;"
+                                         onerror="this.src='/images/default_food.jpg'">
+                                    
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold mb-1 fs-5">
+                                            <a href="/Home/MonAnDetails?id=@item.BienTheMonAn?.MonAn?.MaMonAn&slug=@SlugHelper.GenerateSlugOptimal(item.BienTheMonAn?.MonAn?.TenMon ?? "mon-an")" class="text-dark text-decoration-none">
+                                                @item.BienTheMonAn?.MonAn?.TenMon
+                                            </a>
+                                        </h6>
+                                        <p class="text-muted small mb-2">Phân loại: @item.BienTheMonAn?.MoTaMonAn</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-dark fw-bold">x @item.SoLuongMua</span>
+                                            <span class="text-danger fw-bold fs-6">@item.GiaBan.ToString("N0")đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                @if(donHang.TrangThaiDonHang == "Hoàn thành")
+                                {
+                                    <div class="text-end mb-3 pb-3 @(item != donHang.ChiTietDonHangs.Last() ? "border-bottom" : "")">
+                                        <a href="/Home/MonAnDetails?id=@item.BienTheMonAn?.MonAn?.MaMonAn&slug=@SlugHelper.GenerateSlugOptimal(item.BienTheMonAn?.MonAn?.TenMon ?? "mon-an")" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                                            <i class="bi bi-star-fill text-warning me-1"></i> Đánh giá món này
+                                        </a>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-light border-top rounded-bottom-4 py-3 px-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+                                <div>
+                                    <span class="text-muted small d-block mb-1"><i class="bi bi-calendar-event me-1"></i> Ngày đặt: <strong>@donHang.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</strong></span>
+                                    <span class="text-muted small"><i class="bi bi-credit-card me-1"></i> Thanh toán: <strong class="@(donHang.TrangThaiThanhToan == "Đã thanh toán" ? "text-success" : "text-warning")">@donHang.TrangThaiThanhToan</strong></span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="text-dark me-2 fs-6">Thành tiền:</span>
+                                    <span class="text-danger fs-3 fw-bold">@donHang.ThanhTienKhachTra.ToString("N0")đ</span>
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                @if (donHang.TrangThaiDonHang == "Chờ xác nhận")
+                                {
+                                    <button type="button" class="btn btn-danger btn-huy-don rounded-pill px-4 fw-bold" data-id="@donHang.MaDonHang">
+                                        <i class="bi bi-x-lg me-1"></i> Hủy đơn hàng
+                                    </button>
+                                }
+                                else if (donHang.TrangThaiDonHang == "Hoàn thành")
+                                {
+                                    <a href="/" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                        Mua lại
+                                    </a>
+                                }
+                                else if (donHang.TrangThaiDonHang == "Đã hủy" || donHang.TrangThaiDonHang == "Từ chối")
+                                {
+                                    <a href="/" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                                        Mua lại
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-secondary rounded-pill px-4 fw-bold" disabled>
+                                        Đang xử lý...
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Phân Trang -->
+            @if (ViewBag.TotalPages != null && ViewBag.TotalPages > 1)
+            {
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link rounded-pill px-3 mx-1 shadow-sm" href="/khachhang/don-mua?status=@currentStatus&page=@(ViewBag.CurrentPage - 1)">Trang trước</a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link rounded-circle mx-1 shadow-sm fw-bold" style="width: 40px; height: 40px; line-height: 24px; text-align: center;" href="/khachhang/don-mua?status=@currentStatus&page=@i">@i</a>
+                            </li>
+                        }
+
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link rounded-pill px-3 mx-1 shadow-sm" href="/khachhang/don-mua?status=@currentStatus&page=@(ViewBag.CurrentPage + 1)">Trang tiếp</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            $('.btn-huy-don').click(function() {
+                var btn = $(this);
+                var id = btn.data('id');
+                
+                Swal.fire({
+                    title: 'Xác nhận hủy đơn?',
+                    text: "Vui lòng chọn lý do hủy đơn hàng:",
+                    icon: 'warning',
+                    input: 'select',
+                    inputOptions: {
+                        'Thay đổi ý định': 'Thay đổi ý định',
+                        'Tìm thấy quán khác rẻ/ngon hơn': 'Tìm thấy quán khác rẻ/ngon hơn',
+                        'Quán xác nhận chậm': 'Quán xác nhận chậm',
+                        'Đặt nhầm': 'Đặt nhầm món/số lượng',
+                        'Khác': 'Khác (Nhập thủ công)'
+                    },
+                    inputPlaceholder: 'Chọn lý do',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đồng ý hủy',
+                    cancelButtonText: 'Không hủy',
+                    html: '<input id="swal-input-reason" class="swal2-input d-none" placeholder="Nhập lý do thủ công">',
+                    didOpen: () => {
+                        const select = Swal.getInput();
+                        const manualInput = document.getElementById('swal-input-reason');
+                        select.addEventListener('change', () => {
+                            if (select.value === 'Khác') {
+                                manualInput.classList.remove('d-none');
+                                manualInput.focus();
+                            } else {
+                                manualInput.classList.add('d-none');
+                            }
+                        });
+                    },
+                    preConfirm: (value) => {
+                        if (!value) {
+                            Swal.showValidationMessage('Vui lòng chọn lý do!');
+                            return false;
+                        }
+                        if (value === 'Khác') {
+                            const manualReason = document.getElementById('swal-input-reason').value;
+                            if (!manualReason.trim()) {
+                                Swal.showValidationMessage('Vui lòng nhập lý do thủ công!');
+                                return false;
+                            }
+                            return manualReason.trim();
+                        }
+                        return value;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/khachhang/huydonmua',
+                            type: 'POST',
+                            data: { id: id, lyDo: result.value },
+                            success: function(res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Thành công',
+                                        text: res.message,
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Lỗi', res.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+    </script>
+}
+
+
+
+
+

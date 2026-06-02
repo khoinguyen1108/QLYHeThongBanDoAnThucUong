@@ -1,0 +1,487 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<DoiTac>
+
+@{
+    ViewData["Title"] = "Quản Lý Đối Tác";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 fw-bold"><i class="bi bi-people-fill text-primary me-2"></i> Quản Lý Hồ Sơ & Doanh Thu</h2>
+            <div class="badge bg-primary fs-5 px-4 py-2 shadow-sm rounded-pill">
+                Tổng: @ViewBag.TotalCount đối tác
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Cột trái: Danh sách đối tác -->
+            <div class="col-md-4 col-lg-3 pe-md-1">
+                <form method="get" action="/Admin/QuanLyDoiTac" class="mb-3">
+                    <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden bg-white border">
+                        <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control border-0 px-3 shadow-none" placeholder="Tìm tên đối tác...">
+                        @if (!string.IsNullOrEmpty(ViewBag.SearchStr))
+                        {
+                            <a href="/Admin/QuanLyDoiTac" class="btn btn-white border-0 text-muted d-flex align-items-center bg-white"><i class="bi bi-x-circle-fill"></i></a>
+                        }
+                        <button type="submit" class="btn btn-primary border-0 px-3"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 180px); overflow-y: auto;">
+                    <div class="card-body p-2">
+                        @if (Model.Count == 0)
+                        {
+                            <div class="text-center py-5 text-muted">Không có dữ liệu</div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush border-0">
+                                @foreach (var dt in Model)
+                                {
+                                    <button type="button" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 p-3 partner-card" 
+                                            onclick="loadPartnerDetails(@dt.MaDoiTac, this)">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="fw-bold text-dark text-truncate">@dt.TenQuanDoiTac</span>
+                                        </div>
+                                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@dt.SoDTDoiTac</div>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Phân trang -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="mt-3 d-flex justify-content-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyDoiTac" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-searchStr="@ViewBag.SearchStr">«</a></li>
+                                }
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="QuanLyDoiTac" asp-route-page="@i" asp-route-searchStr="@ViewBag.SearchStr">@i</a>
+                                    </li>
+                                }
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyDoiTac" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-searchStr="@ViewBag.SearchStr">»</a></li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+
+            <!-- Cột phải: Chi tiết đối tác & gian hàng -->
+            <div class="col-md-8 col-lg-9 ps-md-2 mt-3 mt-md-0">
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 150px); overflow-y: auto;">
+                    <div class="card-body p-4 d-flex flex-column" id="partner-detail-view">
+                        <!-- Trạng thái trống (Chưa chọn đối tác) -->
+                        <div class="empty-state text-center m-auto text-muted" id="partner-empty">
+                            <i class="bi bi-shop fs-1 d-block mb-3 opacity-50"></i>
+                            <h5>Chọn một đối tác để xem chi tiết</h5>
+                        </div>
+                        
+                        <!-- Nội dung chi tiết -->
+                        <div class="detail-content d-none" id="partner-content">
+                            <!-- Info Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-6 border-end">
+                                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-person-badge me-2"></i>Thông Tin Đối Tác</h5>
+                                    <table class="table table-borderless table-sm">
+                                        <tr><td class="text-muted w-25">Tên:</td><td class="fw-bold" id="dt-ten"></td></tr>
+                                        <tr><td class="text-muted">SĐT:</td><td id="dt-sdt"></td></tr>
+                                        <tr><td class="text-muted">Email:</td><td id="dt-email"></td></tr>
+                                        <tr><td class="text-muted">Địa chỉ:</td><td id="dt-diachi"></td></tr>
+                                        <tr><td class="text-muted">Tài khoản:</td><td><span class="badge bg-secondary" id="dt-taikhoan"></span></td></tr>
+                                        <tr><td class="text-muted">Trạng thái:</td><td id="dt-trangthai"></td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="fw-bold text-success mb-3"><i class="bi bi-shop-window me-2"></i>Thông Tin Gian Hàng</h5>
+                                    <div id="gh-info-container">
+                                        <table class="table table-borderless table-sm">
+                                            <tr><td class="text-muted w-25">Tên:</td><td class="fw-bold" id="gh-ten"></td></tr>
+                                            <tr><td class="text-muted">Địa chỉ:</td><td id="gh-diachi"></td></tr>
+                                            <tr><td class="text-muted">Giờ mở:</td><td id="gh-thoigian"></td></tr>
+                                            <tr><td class="text-muted">Đánh giá:</td><td class="text-warning fw-bold" id="gh-danhgia"></td></tr>
+                                            <tr><td class="text-muted">Trạng thái:</td><td id="gh-trangthai"></td></tr>
+                                        </table>
+                                    </div>
+                                    <div id="gh-empty-container" class="d-none text-muted p-3 bg-light rounded text-center">
+                                        Đối tác này chưa mở gian hàng.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Revenue Section -->
+                            <h5 class="fw-bold text-dark mb-3 border-top pt-4"><i class="bi bi-cash-stack text-success me-2"></i>Doanh Thu</h5>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-primary text-white rounded-3 shadow-sm">
+                                        <div class="small text-white-50 fw-bold mb-1">HÔM NAY</div>
+                                        <h5 class="fw-bold mb-0" id="rev-daily">0đ</h5>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-success text-white rounded-3 shadow-sm">
+                                        <div class="small text-white-50 fw-bold mb-1">THÁNG NÀY</div>
+                                        <h5 class="fw-bold mb-0" id="rev-monthly">0đ</h5>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-warning text-dark rounded-3 shadow-sm">
+                                        <div class="small text-dark text-opacity-75 fw-bold mb-1">NĂM NAY</div>
+                                        <h5 class="fw-bold mb-0" id="rev-yearly">0đ</h5>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 bg-danger text-white rounded-3 shadow-sm">
+                                        <div class="small text-white-50 fw-bold mb-1">TỔNG CỘNG</div>
+                                        <h5 class="fw-bold mb-0" id="rev-total">0đ</h5>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chart Section -->
+                            <div class="card bg-light border-0 rounded-4">
+                                <div class="card-body">
+                                    <h6 class="fw-bold text-muted mb-3">Biểu đồ doanh thu 7 ngày qua</h6>
+                                    <div style="height: 250px;">
+                                        <canvas id="partnerRevenueChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Orders List Section -->
+                            <h5 class="fw-bold text-dark mb-3 border-top pt-4 mt-4"><i class="bi bi-receipt text-primary me-2"></i>Danh Sách Đơn Hàng</h5>
+                            <div class="table-responsive bg-white rounded-3 shadow-sm border p-3">
+                                <table class="table table-hover align-middle mb-0" id="orders-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã Đơn</th>
+                                            <th>Khách Hàng</th>
+                                            <th>Thời Gian</th>
+                                            <th class="text-end">Tổng Tiền</th>
+                                            <th class="text-center">Trạng Thái</th>
+                                            <th class="text-center">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orders-tbody">
+                                        <!-- Rendered by JS -->
+                                    </tbody>
+                                </table>
+                                <div id="orders-empty" class="text-center py-4 text-muted d-none">
+                                    Không có đơn hàng nào
+                                </div>
+                                <div id="orders-pagination" class="d-flex justify-content-end mt-3">
+                                    <!-- Rendered by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi Tiết Đơn Hàng -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalOrderTitle">Chi tiết đơn hàng</h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p class="text-muted small mb-1">Khách hàng</p>
+                <h6 class="fw-bold mb-1" id="modalCustomerName"></h6>
+                <p class="mb-0 small"><i class="bi bi-telephone text-muted me-1"></i><span id="modalCustomerPhone"></span></p>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <p class="text-muted small mb-1">Thời gian đặt</p>
+                <h6 class="mb-1" id="modalOrderDate"></h6>
+                <div id="modalOrderStatus"></div>
+            </div>
+        </div>
+        
+        <h6 class="fw-bold mb-3 border-bottom pb-2">Danh sách món ăn</h6>
+        <div class="table-responsive mb-4">
+            <table class="table table-borderless align-middle mb-0">
+                <tbody id="modalOrderItems">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-light p-3 rounded-3">
+            <div class="d-flex justify-content-between mb-2 small">
+                <span class="text-muted">Tổng tiền hàng:</span>
+                <span class="fw-bold" id="modalSubtotal"></span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 small">
+                <span class="text-muted">Phí giao hàng:</span>
+                <span class="fw-bold text-dark" id="modalShippingFee"></span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 small">
+                <span class="text-muted">Giảm giá:</span>
+                <span class="fw-bold text-success" id="modalDiscount"></span>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Thành tiền cuối cùng:</span>
+                <span class="fw-bold text-danger fs-5" id="modalTotal"></span>
+            </div>
+            <div class="text-end mt-1 small">
+                Thanh toán: <span id="modalPaymentStatus" class="fw-bold"></span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    .partner-card.active {
+        background-color: #e9ecef !important;
+        border-left: 4px solid #0d6efd !important;
+    }
+    .partner-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chartInstance = null;
+
+        function loadPartnerDetails(id, elem) {
+            $('.partner-card').removeClass('active');
+            $(elem).addClass('active');
+
+            $('#partner-empty').addClass('d-none');
+            $('#partner-content').removeClass('d-none');
+            
+            // Hiện loading state nếu cần
+            
+            $.ajax({
+                url: '/Admin/GetDoiTacDetails/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.success) {
+                        // Bind DT info
+                        $('#dt-ten').text(res.partnerInfo.ten);
+                        $('#dt-sdt').text(res.partnerInfo.sdt);
+                        $('#dt-email').text(res.partnerInfo.email);
+                        $('#dt-diachi').text(res.partnerInfo.diaChi);
+                        $('#dt-taikhoan').text(res.partnerInfo.taiKhoan);
+                        
+                        let badgeClass = res.partnerInfo.trangThai === "Còn đang hoạt động" ? "success" : "warning";
+                        $('#dt-trangthai').html(`<span class="badge bg-${badgeClass}">${res.partnerInfo.trangThai}</span>`);
+
+                        // Bind GH info
+                        if (res.storeInfo) {
+                            $('#gh-empty-container').addClass('d-none');
+                            $('#gh-info-container').removeClass('d-none');
+                            
+                            $('#gh-ten').text(res.storeInfo.ten);
+                            $('#gh-diachi').text(res.storeInfo.diaChi);
+                            $('#gh-thoigian').text(res.storeInfo.moCua + " - " + res.storeInfo.dongCua);
+                            $('#gh-danhgia').html(res.storeInfo.danhGia + ' <i class="bi bi-star-fill"></i>');
+                            
+                            let ghBadgeClass = res.storeInfo.trangThai === "Đang mở cửa" ? "success" : "danger";
+                            $('#gh-trangthai').html(`<span class="badge bg-${ghBadgeClass}">${res.storeInfo.trangThai}</span>`);
+                        } else {
+                            $('#gh-info-container').addClass('d-none');
+                            $('#gh-empty-container').removeClass('d-none');
+                        }
+
+                        // Bind Revenue
+                        $('#rev-daily').text(res.revenue.daily.toLocaleString('vi-VN') + 'đ');
+                        $('#rev-monthly').text(res.revenue.monthly.toLocaleString('vi-VN') + 'đ');
+                        $('#rev-yearly').text(res.revenue.yearly.toLocaleString('vi-VN') + 'đ');
+                        $('#rev-total').text(res.revenue.total.toLocaleString('vi-VN') + 'đ');
+
+                        // Render Chart
+                        renderChart(res.chartData.labels, res.chartData.data);
+
+                        // Load Orders List
+                        loadPartnerOrders(id, 1);
+                    }
+                }
+            });
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('partnerRevenueChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: data,
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000) + 'M';
+                                    if (value >= 1000) return (value / 1000) + 'K';
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadPartnerOrders(id, page) {
+            $.ajax({
+                url: '/Admin/GetDoiTacOrders',
+                type: 'GET',
+                data: { maDoiTac: id, page: page },
+                success: function(res) {
+                    if(res.success) {
+                        let tbody = $('#orders-tbody');
+                        tbody.empty();
+                        
+                        if(res.orders.length === 0) {
+                            $('#orders-table').addClass('d-none');
+                            $('#orders-empty').removeClass('d-none');
+                            $('#orders-pagination').empty();
+                            return;
+                        }
+
+                        $('#orders-table').removeClass('d-none');
+                        $('#orders-empty').addClass('d-none');
+
+                        res.orders.forEach(function(order) {
+                            let statusBadge = '';
+                            if(order.trangThai === "Hoàn thành") {
+                                statusBadge = `<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">${order.trangThai}</span>`;
+                            } else if(order.trangThai === "Đã hủy" || order.trangThai === "Từ chối") {
+                                statusBadge = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">${order.trangThai}</span>`;
+                            } else {
+                                statusBadge = `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill text-dark">${order.trangThai}</span>`;
+                            }
+
+                            let tr = `
+                                <tr>
+                                    <td class="fw-bold text-dark">#${order.maDonHang}</td>
+                                    <td>${order.khachHang}</td>
+                                    <td class="text-muted small">${order.ngayTao}</td>
+                                    <td class="fw-bold text-danger text-end">${order.tongTien.toLocaleString('vi-VN')}đ</td>
+                                    <td class="text-center">${statusBadge}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="viewOrderDetails(${order.maDonHang})">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.append(tr);
+                        });
+
+                        // Render Pagination
+                        let pagination = $('#orders-pagination');
+                        pagination.empty();
+                        if(res.totalPages > 1) {
+                            let ul = $('<ul class="pagination pagination-sm mb-0"></ul>');
+                            if(res.currentPage > 1) {
+                                ul.append(`<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadPartnerOrders(${id}, ${res.currentPage - 1})">«</a></li>`);
+                            }
+                            for(let i = 1; i <= res.totalPages; i++) {
+                                let activeClass = i === res.currentPage ? "active" : "";
+                                ul.append(`<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="event.preventDefault(); loadPartnerOrders(${id}, ${i})">${i}</a></li>`);
+                            }
+                            if(res.currentPage < res.totalPages) {
+                                ul.append(`<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadPartnerOrders(${id}, ${res.currentPage + 1})">»</a></li>`);
+                            }
+                            pagination.append(ul);
+                        }
+                    }
+                }
+            });
+        }
+
+        function viewOrderDetails(orderId) {
+            $.ajax({
+                url: '/Admin/GetOrderDetails/' + orderId,
+                type: 'GET',
+                success: function(res) {
+                    if(res.success) {
+                        let info = res.orderInfo;
+                        $('#modalOrderTitle').text('Đơn hàng #' + info.maDonHang);
+                        $('#modalCustomerName').text(info.khachHang);
+                        $('#modalCustomerPhone').text(info.soDienThoai);
+                        $('#modalOrderDate').text(info.ngayTao);
+                        
+                        let stBadge = '';
+                        if(info.trangThai === "Hoàn thành") stBadge = 'bg-success';
+                        else if(info.trangThai === "Đã hủy" || info.trangThai === "Từ chối") stBadge = 'bg-danger';
+                        else stBadge = 'bg-warning text-dark';
+                        $('#modalOrderStatus').html(`<span class="badge ${stBadge}">${info.trangThai}</span>`);
+
+                        let tbody = $('#modalOrderItems');
+                        tbody.empty();
+                        res.items.forEach(function(item) {
+                            let imgSrc = item.hinhAnh ? '/images/monan/' + item.hinhAnh : '/images/default_food.jpg';
+                            let tr = `
+                                <tr>
+                                    <td style="width: 60px;">
+                                        <img src="${imgSrc}" class="rounded-3 object-fit-cover" width="50" height="50">
+                                    </td>
+                                    <td>
+                                        <h6 class="mb-0 fw-bold">${item.tenMon}</h6>
+                                        <small class="text-muted">${item.moTa || ''}</small>
+                                    </td>
+                                    <td class="text-center text-muted">x${item.soLuong}</td>
+                                    <td class="text-end fw-bold">${item.thanhTien.toLocaleString('vi-VN')}đ</td>
+                                </tr>
+                            `;
+                            tbody.append(tr);
+                        });
+
+                        $('#modalSubtotal').text(info.tongTien.toLocaleString('vi-VN') + 'đ');
+                        $('#modalShippingFee').text(info.phiGiaoHang.toLocaleString('vi-VN') + 'đ');
+                        $('#modalDiscount').text('-' + info.tienGiam.toLocaleString('vi-VN') + 'đ');
+                        $('#modalTotal').text(info.thanhTienKhachTra.toLocaleString('vi-VN') + 'đ');
+                        
+                        let payClass = info.thanhToan === "Đã thanh toán" ? "text-success" : "text-warning";
+                        $('#modalPaymentStatus').html(`<span class="${payClass}">${info.thanhToan}</span>`);
+
+                        var myModal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+                        myModal.show();
+                    } else {
+                        alert('Không thể tải chi tiết đơn hàng!');
+                    }
+                }
+            });
+        }
+    </script>
+}
+

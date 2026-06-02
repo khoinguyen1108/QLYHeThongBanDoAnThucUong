@@ -1,0 +1,399 @@
+﻿@model List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>
+@{
+    ViewData["Title"] = "Quản Lý Đơn Hàng";
+
+    var choXacNhan = Model.Where(d => d.TrangThaiDonHang == "Chờ xác nhận").ToList();
+    var daXacNhan = Model.Where(d => d.TrangThaiDonHang == "Đã xác nhận").ToList();
+    var dangChuanBi = Model.Where(d => d.TrangThaiDonHang == "Đang chuẩn bị").ToList();
+    var dangGiao = Model.Where(d => d.TrangThaiDonHang == "Đang giao").ToList();
+    var hoanThanh = Model.Where(d => d.TrangThaiDonHang == "Hoàn thành").ToList();
+    var daHuy = Model.Where(d => d.TrangThaiDonHang == "Đã hủy").ToList();
+
+    var tabs = new[] {
+        new { Id = "choxacnhan", Title = "Chờ xác nhận", List = choXacNhan, NextAction = "Xác nhận đơn", NextStatus = "Đã xác nhận", ShowTitleBadge = true, ShowInnerCount = false, AllowCancel = true },
+        new { Id = "daxacnhan", Title = "Đã xác nhận", List = daXacNhan, NextAction = "Bắt đầu chuẩn bị", NextStatus = "Đang chuẩn bị", ShowTitleBadge = true, ShowInnerCount = false, AllowCancel = true },
+        new { Id = "dangchuanbi", Title = "Đang chuẩn bị", List = dangChuanBi, NextAction = "Giao cho Shipper", NextStatus = "Đang giao", ShowTitleBadge = true, ShowInnerCount = false, AllowCancel = true },
+        new { Id = "danggiao", Title = "Đang giao", List = dangGiao, NextAction = "Xác nhận hoàn thành", NextStatus = "Hoàn thành", ShowTitleBadge = true, ShowInnerCount = false, AllowCancel = true },
+        new { Id = "hoanthanh", Title = "Hoàn thành", List = hoanThanh, NextAction = "", NextStatus = "", ShowTitleBadge = false, ShowInnerCount = true, AllowCancel = false },
+        new { Id = "dahuy", Title = "Đã hủy", List = daHuy, NextAction = "", NextStatus = "", ShowTitleBadge = false, ShowInnerCount = true, AllowCancel = false }
+    };
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0"><i class="bi bi-receipt text-primary me-2"></i>Quản Lý Đơn Hàng</h2>
+        </div>
+
+        <ul class="nav nav-pills mb-4 gap-2" id="order-tabs" role="tablist">
+            @for (int i = 0; i < tabs.Length; i++)
+            {
+                var tab = tabs[i];
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(i == 0 ? "active" : "") rounded-pill fw-bold" 
+                            id="tab-@tab.Id" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#pane-@tab.Id" 
+                            type="button" role="tab">
+                        @tab.Title
+                        @if (tab.ShowTitleBadge)
+                        {
+                            <span class="badge @(i == 0 ? "bg-white text-primary" : "bg-secondary text-white") ms-1 tab-badge" data-count="@tab.List.Count">@tab.List.Count</span>
+                        }
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content" id="order-tabsContent">
+            @for (int i = 0; i < tabs.Length; i++)
+            {
+                var tab = tabs[i];
+                <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="pane-@tab.Id" role="tabpanel">
+                    
+                    @if (tab.ShowInnerCount)
+                    {
+                        <div class="alert alert-light border-0 shadow-sm rounded-4 mb-3 d-flex align-items-center">
+                            <i class="bi bi-info-circle-fill text-muted me-2"></i>
+                            <span class="fw-bold">Tổng cộng: @tab.List.Count đơn hàng</span>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <!-- Danh sách đơn hàng (Master) -->
+                        <div class="col-md-5 col-lg-4 pe-md-1">
+                            <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 220px); overflow-y: auto;">
+                                <div class="card-body p-2">
+                                    @if (!tab.List.Any())
+                                    {
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            <small>Không có đơn hàng nào.</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="list-group list-group-flush border-0">
+                                            @foreach (var item in tab.List)
+                                            {
+                                                <button type="button" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 p-3 order-card" 
+                                                        onclick="showOrderDetail('@item.MaDonHang', '@tab.Id')">
+                                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                                        <span class="fw-bold text-dark">#@item.MaDonHang</span>
+                                                        <span class="badge bg-light text-dark border">@item.NgayTaoDon.ToString("HH:mm")</span>
+                                                    </div>
+                                                    <div class="small text-muted mb-2"><i class="bi bi-person me-1"></i>@item.KhachHang?.TenKH</div>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="fw-bold text-success">@String.Format("{0:0,0}đ", item.ThanhTienKhachTra)</span>
+                                                        @if (item.TrangThaiThanhToan == "Đã thanh toán")
+                                                        {
+                                                            <span class="badge bg-success-subtle text-success small">Đã TT</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger-subtle text-danger small">Chưa TT</span>
+                                                        }
+                                                    </div>
+                                                </button>
+
+                                                <!-- Ẩn thông tin chi tiết để JS lấy -->
+                                                <div id="detail-data-@tab.Id-@item.MaDonHang" class="d-none">
+                                                    <div class="data-customer">@item.KhachHang?.TenKH</div>
+                                                    <div class="data-phone">@item.KhachHang?.SoDTKH</div>
+                                                    <div class="data-address">@item.KhachHang?.DiaChiCuThe</div>
+                                                    <div class="data-time">@item.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</div>
+                                                    <div class="data-total">@String.Format("{0:0,0}đ", item.ThanhTienKhachTra)</div>
+                                                    <div class="data-payment">@item.TrangThaiThanhToan</div>
+                                                    <div class="data-items">
+                                                        @System.Text.Json.JsonSerializer.Serialize(item.ChiTietDonHangs.Select(ct => new {
+                                                            name = ct.BienTheMonAn?.MonAn?.TenMon,
+                                                            quantity = ct.SoLuongMua,
+                                                            price = ct.GiaBan,
+                                                            variant = ct.BienTheMonAn?.MoTaMonAn
+                                                        }))
+                                                    </div>
+                                                    <div class="data-reason">@item.LyDoHuy</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chi tiết đơn hàng (Detail) -->
+                        <div class="col-md-7 col-lg-8 ps-md-2 mt-3 mt-md-0">
+                            <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 220px);">
+                                <div class="card-body p-0 d-flex flex-column" id="detail-view-@tab.Id">
+                                    <!-- Trạng thái trống (Chưa chọn đơn) -->
+                                    <div class="empty-state text-center m-auto text-muted">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" width="100" class="mb-3 opacity-50" />
+                                        <p>Chọn một đơn hàng bên trái để xem chi tiết</p>
+                                    </div>
+                                    
+                                    <!-- Nội dung chi tiết -->
+                                    <div class="detail-content d-none flex-grow-1 d-flex flex-column">
+                                        <div class="p-4 border-bottom">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h4 class="fw-bold mb-0">Đơn hàng <span class="text-primary detail-id"></span></h4>
+                                                <span class="badge bg-secondary detail-payment"></span>
+                                            </div>
+                                            <div class="row small text-dark">
+                                                <div class="col-sm-6 mb-2">
+                                                    <div class="text-muted">Khách hàng</div>
+                                                    <div class="fw-bold detail-customer fs-6"></div>
+                                                    <div class="detail-phone"></div>
+                                                </div>
+                                                <div class="col-sm-6 mb-2">
+                                                    <div class="text-muted">Giao đến</div>
+                                                    <div class="fw-medium detail-address"></div>
+                                                    <div class="text-muted detail-time mt-1"></div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-danger d-none detail-reason mt-3 mb-0">
+                                                <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Lý do hủy:</strong> <span class="reason-text"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Danh sách món ăn (Scrollable) -->
+                                        <div class="p-4 flex-grow-1" style="overflow-y: auto;">
+                                            <h6 class="fw-bold mb-3 text-muted">DANH SÁCH MÓN</h6>
+                                            <div class="detail-items-container">
+                                                <!-- items go here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Footer & Actions -->
+                                        <div class="p-4 border-top bg-light mt-auto">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h5 class="mb-0 text-muted">Tổng cộng:</h5>
+                                                <h4 class="mb-0 fw-bold text-success detail-total"></h4>
+                                            </div>
+                                            
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                @if (tab.AllowCancel)
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger px-4 rounded-pill fw-bold" onclick="updateOrderStatus(currentOrderId, 'Đã hủy')">Hủy đơn</button>
+                                                }
+                                                @if (!string.IsNullOrEmpty(tab.NextAction))
+                                                {
+                                                    <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm" onclick="updateOrderStatus(currentOrderId, '@tab.NextStatus')">@tab.NextAction</button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-card.active {
+        background-color: #f8f9fa !important;
+        border-left: 4px solid #198754 !important;
+    }
+    .order-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s ease;
+    }
+    .order-card:hover {
+        background-color: #f8f9fa;
+    }
+    .nav-pills .nav-link.active .tab-badge {
+        color: #198754 !important;
+    }
+</style>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function() {
+            var hash = window.location.hash;
+            if (hash) {
+                var tabBtn = $(hash);
+                if (tabBtn.length) {
+                    var tabInstance = new bootstrap.Tab(tabBtn[0]);
+                    tabInstance.show();
+                }
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let currentOrderId = null;
+
+        // Cập nhật class badge khi đổi tab
+        $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+            $('.tab-badge').removeClass('text-primary').addClass('text-white bg-secondary').removeClass('bg-white');
+            $(e.target).find('.tab-badge').removeClass('text-white bg-secondary').addClass('bg-white text-primary');
+        });
+
+        function showOrderDetail(orderId, tabId) {
+            currentOrderId = orderId;
+            
+            // Cập nhật UI list
+            $(`#pane-${tabId} .order-card`).removeClass('active');
+            event.currentTarget.classList.add('active');
+
+            // Lấy data
+            const dataDiv = $(`#detail-data-${tabId}-${orderId}`);
+            const customer = dataDiv.find('.data-customer').text();
+            const phone = dataDiv.find('.data-phone').text();
+            const address = dataDiv.find('.data-address').text() || 'Nhận tại cửa hàng';
+            const time = dataDiv.find('.data-time').text();
+            const total = dataDiv.find('.data-total').text();
+            const payment = dataDiv.find('.data-payment').text();
+            const reason = dataDiv.find('.data-reason').text();
+            const items = JSON.parse(dataDiv.find('.data-items').text());
+
+            // Bind data
+            const detailView = $(`#detail-view-${tabId}`);
+            detailView.find('.empty-state').addClass('d-none');
+            detailView.find('.detail-content').removeClass('d-none');
+
+            detailView.find('.detail-id').text('#' + orderId);
+            detailView.find('.detail-customer').text(customer);
+            detailView.find('.detail-phone').text(phone);
+            detailView.find('.detail-address').text(address);
+            detailView.find('.detail-time').text(time);
+            detailView.find('.detail-total').text(total);
+            
+            if (reason) {
+                detailView.find('.detail-reason').removeClass('d-none');
+                detailView.find('.reason-text').text(reason);
+            } else {
+                detailView.find('.detail-reason').addClass('d-none');
+            }
+
+            const paymentBadge = detailView.find('.detail-payment');
+            paymentBadge.text(payment);
+            if (payment === 'Đã thanh toán') {
+                paymentBadge.removeClass('bg-secondary').addClass('bg-success');
+            } else {
+                paymentBadge.removeClass('bg-success').addClass('bg-secondary');
+            }
+
+            // Bind items
+            let itemsHtml = '';
+            items.forEach(item => {
+                const subtotal = item.quantity * item.price;
+                itemsHtml += `
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded text-center fw-bold d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                x${item.quantity}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">${item.name}</div>
+                                <div class="small text-muted">${item.variant || ''}</div>
+                            </div>
+                        </div>
+                        <div class="fw-bold text-dark">
+                            ${subtotal.toLocaleString('vi-VN')}đ
+                        </div>
+                    </div>
+                `;
+            });
+            detailView.find('.detail-items-container').html(itemsHtml);
+        }
+
+        function updateOrderStatus(id, newStatus) {
+            if (!id) return;
+
+            if (newStatus === 'Đã hủy') {
+                Swal.fire({
+                    title: 'Lý do hủy đơn',
+                    input: 'select',
+                    inputOptions: {
+                        'Hết món': 'Hết món',
+                        'Quán quá tải': 'Quán quá tải',
+                        'Khách yêu cầu': 'Khách yêu cầu',
+                        'Khác': 'Lý do khác (Nhập thủ công)'
+                    },
+                    inputPlaceholder: 'Chọn lý do',
+                    showCancelButton: true,
+                    confirmButtonText: 'Xác nhận hủy',
+                    cancelButtonText: 'Đóng',
+                    html: '<input id="swal-input-reason" class="swal2-input d-none" placeholder="Nhập lý do thủ công">',
+                    didOpen: () => {
+                        const select = Swal.getInput();
+                        const manualInput = document.getElementById('swal-input-reason');
+                        select.addEventListener('change', () => {
+                            if (select.value === 'Khác') {
+                                manualInput.classList.remove('d-none');
+                                manualInput.focus();
+                            } else {
+                                manualInput.classList.add('d-none');
+                            }
+                        });
+                    },
+                    preConfirm: (value) => {
+                        if (!value) {
+                            Swal.showValidationMessage('Vui lòng chọn lý do!');
+                            return false;
+                        }
+                        if (value === 'Khác') {
+                            const manualReason = document.getElementById('swal-input-reason').value;
+                            if (!manualReason.trim()) {
+                                Swal.showValidationMessage('Vui lòng nhập lý do thủ công!');
+                                return false;
+                            }
+                            return manualReason.trim();
+                        }
+                        return value;
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitOrderStatus(id, newStatus, result.value);
+                    }
+                });
+            } else {
+                Swal.fire({
+                    title: 'Xác nhận thao tác',
+                    text: `Chuyển đơn hàng #${id} sang trạng thái: ${newStatus}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đồng ý',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitOrderStatus(id, newStatus, null);
+                    }
+                });
+            }
+        }
+
+        function submitOrderStatus(id, newStatus, reason) {
+            $.ajax({
+                url: '/QuanLyGianHang/CapNhatTrangThai',
+                type: 'POST',
+                data: { id: id, loai: 'DonHang', giaTri: newStatus, lyDo: reason },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Đã cập nhật trạng thái',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi', res.message, 'error');
+                    }
+                }
+            });
+        }
+    </script>
+}
+
+

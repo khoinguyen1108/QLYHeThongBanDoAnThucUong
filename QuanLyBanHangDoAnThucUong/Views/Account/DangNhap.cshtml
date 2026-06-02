@@ -1,0 +1,107 @@
+﻿@model DangNhapViewModel
+
+@{
+    bool isSeller = ViewBag.IsSeller != null && (bool)ViewBag.IsSeller;
+    ViewData["Title"] = isSeller ? "Đăng Nhập Đối Tác" : "Đăng Nhập Khách Hàng";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            
+            <!-- Tab chuyển đổi -->
+            <ul class="nav nav-pills nav-justified mb-4 p-1 bg-light rounded-pill shadow-sm">
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill @(!isSeller ? "active fw-bold" : "text-muted")" href="/buyer/DangNhap">🛒 Khách Hàng</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill @(isSeller ? "active fw-bold bg-danger text-white" : "text-muted")" href="/seller/DangNhap">🏪 Đối tác</a>
+                </li>
+            </ul>
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4 fw-bold @(isSeller ? "text-danger" : "text-primary")">
+                        @(isSeller ? "Đăng Nhập Đối Tác" : "Đăng Nhập")
+                    </h3>
+
+                    <form method="post" action="@(isSeller ? "/seller/DangNhap" : "/buyer/DangNhap")">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="TenDangNhap" class="form-label fw-bold">Tên Đăng Nhập</label>
+                            <input type="text" class="form-control form-control-lg bg-light"
+                                   id="TenDangNhap" asp-for="TenDangNhap"
+                                   placeholder="Nhập tên đăng nhập" required>
+                            <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 position-relative">
+                            <label for="MatKhau" class="form-label fw-bold">Mật Khẩu</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg bg-light pe-5"
+                                       id="MatKhau" asp-for="MatKhau" placeholder="Nhập mật khẩu" required>
+                                <button class="btn position-absolute top-50 end-0 translate-middle-y me-2" type="button" id="togglePassword" style="border: none; background: transparent; z-index: 10;">
+                                    <i class="bi bi-eye-slash-fill" id="eyeIcon" style="font-size: 1.2rem; color: #6c757d;"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="RememberMe" asp-for="RememberMe">
+                                <label class="form-check-label text-muted" for="RememberMe">Nhớ mật khẩu</label>
+                            </div>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+                        {
+                            <div class="alert alert-danger py-2 rounded-3">
+                                <ul class="mb-0 small ps-3">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-lg w-100 mb-3 fw-bold text-white rounded-pill shadow-sm" style="background-color: @(isSeller ? "#dc3545" : "#0d6efd"); border: none;">
+                            Đăng Nhập
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0 text-muted">
+                            Chưa có tài khoản?
+                            <a href="@(isSeller ? "/seller/DangKy" : "/buyer/DangKy")" class="fw-bold text-decoration-none @(isSeller ? "text-danger" : "text-primary")">Đăng ký ngay</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const togglePassword = document.getElementById("togglePassword");
+        const password = document.getElementById("MatKhau");
+        const eyeIcon = document.getElementById("eyeIcon");
+
+        togglePassword.addEventListener("click", function () {
+            const type = password.getAttribute("type") === "password" ? "text" : "password";
+            password.setAttribute("type", type);
+            if(type === "text") {
+                eyeIcon.classList.remove("bi-eye-slash-fill");
+                eyeIcon.classList.add("bi-eye-fill");
+            } else {
+                eyeIcon.classList.remove("bi-eye-fill");
+                eyeIcon.classList.add("bi-eye-slash-fill");
+            }
+        });
+    });
+</script>

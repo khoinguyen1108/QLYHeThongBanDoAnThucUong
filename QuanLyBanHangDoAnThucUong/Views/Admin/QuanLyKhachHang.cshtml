@@ -1,0 +1,181 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<KhachHang>
+
+@{
+    ViewData["Title"] = "Quản Lý Khách Hàng";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 fw-bold"><i class="bi bi-people text-primary me-2"></i>Quản Lý Khách Hàng</h2>
+            <div class="badge bg-primary text-white fs-6 px-4 py-2 rounded-pill">
+                Tổng: @ViewBag.TotalCount
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Cột trái: Danh sách khách hàng -->
+            <div class="col-md-4 col-lg-3 pe-md-1">
+                <form method="get" action="/Admin/QuanLyKhachHang" class="mb-3">
+                    <div class="input-group input-group-sm shadow-sm rounded-pill overflow-hidden bg-white border">
+                        <input type="text" name="searchStr" value="@ViewBag.SearchStr" class="form-control border-0 px-3 shadow-none" placeholder="Tìm tên, SĐT...">
+                        @if (!string.IsNullOrEmpty(ViewBag.SearchStr))
+                        {
+                            <a href="/Admin/QuanLyKhachHang" class="btn btn-white border-0 text-muted d-flex align-items-center bg-white"><i class="bi bi-x-circle-fill"></i></a>
+                        }
+                        <button type="submit" class="btn btn-primary border-0 px-3"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 180px); overflow-y: auto;">
+                    <div class="card-body p-2">
+                        @if (Model.Count == 0)
+                        {
+                            <div class="text-center py-5 text-muted">Không có dữ liệu</div>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush border-0">
+                                @foreach (var kh in Model)
+                                {
+                                    <button type="button" class="list-group-item list-group-item-action border-0 rounded-3 mb-1 p-3 custom-card" 
+                                            onclick="loadKhachHangDetails(@kh.MaKH, this)">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="fw-bold text-dark text-truncate">@kh.TenKH</span>
+                                            <span class="badge bg-primary rounded-pill" style="font-size:0.65rem;">@kh.DiemTichLuy điểm</span>
+                                        </div>
+                                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@kh.SoDTKH</div>
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Phân trang -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="mt-3 d-flex justify-content-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyKhachHang" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-searchStr="@ViewBag.SearchStr">«</a></li>
+                                }
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="QuanLyKhachHang" asp-route-page="@i" asp-route-searchStr="@ViewBag.SearchStr">@i</a>
+                                    </li>
+                                }
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item"><a class="page-link" asp-action="QuanLyKhachHang" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-searchStr="@ViewBag.SearchStr">»</a></li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+
+            <!-- Cột phải: Chi tiết khách hàng -->
+            <div class="col-md-8 col-lg-9 ps-md-2 mt-3 mt-md-0">
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100vh - 120px);">
+                    <div class="card-body p-4 d-flex flex-column" id="detail-view">
+                        <!-- Trạng thái trống (Chưa chọn) -->
+                        <div class="empty-state text-center m-auto text-muted" id="detail-empty">
+                            <i class="bi bi-person-bounding-box fs-1 d-block mb-3 opacity-50"></i>
+                            <h5>Chọn một khách hàng để xem chi tiết</h5>
+                        </div>
+                        
+                        <!-- Nội dung chi tiết -->
+                        <div class="detail-content d-none h-100 flex-column" id="detail-content">
+                            <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width:60px; height:60px;">
+                                    <i class="bi bi-person-fill fs-2"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold mb-1 text-primary" id="dt-ten"></h4>
+                                    <div class="text-muted"><i class="bi bi-telephone me-1"></i><span id="dt-sdt"></span></div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6 border-end">
+                                    <h5 class="fw-bold text-dark mb-3">Thông Tin Cơ Bản</h5>
+                                    <table class="table table-borderless table-sm">
+                                        <tr><td class="text-muted w-25">Email:</td><td id="dt-email"></td></tr>
+                                        <tr><td class="text-muted">Giới tính:</td><td id="dt-gioitinh"></td></tr>
+                                        <tr><td class="text-muted">Ngày sinh:</td><td id="dt-ngaysinh"></td></tr>
+                                        <tr><td class="text-muted">Địa chỉ:</td><td id="dt-diachi"></td></tr>
+                                        <tr><td class="text-muted">Tài khoản:</td><td><span class="badge bg-secondary" id="dt-taikhoan"></span></td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="fw-bold text-dark mb-3">Thống Kê Mua Hàng</h5>
+                                    <div class="row">
+                                        <div class="col-6 mb-3">
+                                            <div class="p-3 bg-light rounded-3 text-center border">
+                                                <div class="text-muted small mb-1">Số Đơn Hàng</div>
+                                                <h4 class="fw-bold text-primary mb-0" id="stat-orders">0</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="p-3 bg-light rounded-3 text-center border">
+                                                <div class="text-muted small mb-1">Tổng Chi Tiêu</div>
+                                                <h4 class="fw-bold text-success mb-0" id="stat-spent">0đ</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+    .custom-card.active {
+        background-color: #e9ecef !important;
+        border-left: 4px solid #0d6efd !important;
+    }
+    .custom-card {
+        border-left: 4px solid transparent !important;
+        transition: all 0.2s;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function loadKhachHangDetails(id, elem) {
+            $('.custom-card').removeClass('active');
+            $(elem).addClass('active');
+
+            $('#detail-empty').addClass('d-none');
+            $('#detail-content').removeClass('d-none').addClass('d-flex');
+            
+            $.ajax({
+                url: '/Admin/GetKhachHangDetails/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.success) {
+                        $('#dt-ten').text(res.info.ten || 'N/A');
+                        $('#dt-sdt').text(res.info.sdt || 'N/A');
+                        $('#dt-email').text(res.info.email || 'N/A');
+                        $('#dt-diachi').text(res.info.diaChi || 'N/A');
+                        $('#dt-gioitinh').text(res.info.gioiTinh || 'N/A');
+                        $('#dt-ngaysinh').text(res.info.ngaySinh || 'N/A');
+                        $('#dt-taikhoan').text(res.info.taiKhoan || 'Chưa liên kết');
+                        
+                        $('#stat-orders').text(res.stats.orders);
+                        $('#stat-spent').text(res.stats.spent.toLocaleString('vi-VN') + 'đ');
+                    }
+                }
+            });
+        }
+    </script>
+}

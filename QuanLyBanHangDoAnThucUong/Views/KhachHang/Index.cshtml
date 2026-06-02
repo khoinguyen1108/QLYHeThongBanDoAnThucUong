@@ -1,0 +1,44 @@
+@model KhachHang
+
+@{
+    ViewData["Title"] = "Trang Khách Hàng";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <!-- Sidebar -->
+        @await Html.PartialAsync("_KhachHangSidebar")
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Welcome -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #f05023 0%, #ff8c42 100%);">
+                <div class="card-body p-4 text-white">
+                    <h3 class="fw-bold mb-1"><i class="bi bi-emoji-smile me-2"></i>Chào mừng, @Model.TenKH!</h3>
+                    <p class="mb-0" style="color: rgba(255,255,255,0.9);">Quản lý tài khoản và theo dõi đơn hàng của bạn tại đây.</p>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- Thông tin cá nhân -->
+                <div class="col-md-12 mb-3">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-2"></i>Thông tin cá nhân</h5>
+                            <div class="mb-2"><strong>Tên:</strong> @Model.TenKH</div>
+                            <div class="mb-2"><strong>Email:</strong> @Model.EmailKH</div>
+                            <div class="mb-2"><strong>SĐT:</strong> @Model.SoDTKH</div>
+                            <div class="mb-3"><strong>Địa chỉ:</strong> @Model.DiaChiCuThe</div>
+                            <a href="/khachhang/chinh-sua-ho-so" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

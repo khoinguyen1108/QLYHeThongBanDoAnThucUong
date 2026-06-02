@@ -1,0 +1,188 @@
+@model DangKyDoiTacViewModel
+
+@{
+    ViewData["Title"] = "Đăng Ký Đối Tác";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            
+            <ul class="nav nav-pills nav-justified mb-4 p-1 bg-light rounded-pill shadow-sm">
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill text-muted" href="/buyer/DangKy">Khách Hàng</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill active fw-bold bg-danger text-white" href="/seller/DangKy">Đối tác</a>
+                </li>
+            </ul>
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4 text-danger fw-bold">
+                        Đăng Ký Trở Thành Đối Tác
+                    </h3>
+
+                    <form method="post" action="/seller/DangKy">
+                        @Html.AntiForgeryToken()
+                        <h6 class="fw-bold text-muted mb-3 border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>Thông tin đăng nhập</h6>
+                        <div class="mb-3">
+                            <label asp-for="TenDangNhap" class="form-label fw-bold"></label>
+                            <input class="form-control bg-light" asp-for="TenDangNhap" placeholder="Tên đăng nhập" required>
+                            <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="MatKhau" class="form-label fw-bold"></label>
+                            <input type="password" class="form-control bg-light" asp-for="MatKhau" placeholder="Mật khẩu" required>
+                            <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="XacNhanMatKhau" class="form-label fw-bold"></label>
+                            <input type="password" class="form-control bg-light" asp-for="XacNhanMatKhau" placeholder="Xác nhận mật khẩu" required>
+                            <span asp-validation-for="XacNhanMatKhau" class="text-danger small"></span>
+                        </div>
+
+                        <h6 class="fw-bold text-muted mb-3 border-bottom pb-2"><i class="bi bi-shop me-2"></i>Thông tin Quán/Cửa hàng</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenQuanDoiTac" class="form-label fw-bold"></label>
+                                <input class="form-control bg-light" asp-for="TenQuanDoiTac" placeholder="Tên quán của bạn" required>
+                                <span asp-validation-for="TenQuanDoiTac" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EmailDTac" class="form-label fw-bold"></label>
+                                <input type="email" class="form-control bg-light" asp-for="EmailDTac" placeholder="Email liên hệ" required>
+                                <span asp-validation-for="EmailDTac" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SoDTDoiTac" class="form-label fw-bold"></label>
+                            <input type="tel" class="form-control bg-light" asp-for="SoDTDoiTac" placeholder="Số điện thoại hotline" required>
+                            <span asp-validation-for="SoDTDoiTac" class="text-danger small"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ThanhPho" class="form-label fw-bold"></label>
+                                <select class="form-select bg-light" asp-for="ThanhPho" required>
+                                    <option value="">Chọn thành phố</option>
+                                    <option value="TP.HCM">Hồ Chí Minh</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Bình Dương">Bình Dương</option>
+                                    <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                </select>
+                                <span asp-validation-for="ThanhPho" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PhuongXa" class="form-label fw-bold"></label>
+                                <select class="form-select bg-light" asp-for="PhuongXa" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                    @if(ViewBag.PhuongXas != null)
+                                    {
+                                        foreach(var px in ViewBag.PhuongXas)
+                                        {
+                                            <option value="@px">@px</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="PhuongXa" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label asp-for="DiaChiDoiTac" class="form-label fw-bold"></label>
+                            <input class="form-control bg-light" asp-for="DiaChiDoiTac" placeholder="Địa chỉ kinh doanh cụ thể (Số nhà, đường...)" required>
+                            <span asp-validation-for="DiaChiDoiTac" class="text-danger small"></span>
+                        </div>
+                        
+                        <h6 class="fw-bold text-muted mb-3 border-bottom pb-2"><i class="bi bi-file-earmark-text me-2"></i>Chính sách & Điều lệ</h6>
+                        
+                        <div class="mb-3">
+                            <label asp-for="MaDieuLe" class="form-label fw-bold">Chọn chính sách hợp tác</label>
+                            <select asp-for="MaDieuLe" class="form-select bg-light" required>
+                                <option value="">-- Vui lòng chọn điều lệ --</option>
+                                @if(ViewBag.DieuLes != null)
+                                {
+                                    foreach(var dle in ViewBag.DieuLes)
+                                    {
+                                        <option value="@dle.MaDieuLe">@dle.TenDieuLe (Phí: @dle.PhiChietKhau%)</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="MaDieuLe" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Khu vực giải thích policy (tuỳ chọn thêm JS) -->
+                        <div id="policyDescription" class="mb-3 p-3 bg-light rounded text-muted small d-none">
+                            <i class="bi bi-info-circle text-primary me-1"></i> <span id="policyText"></span>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input class="form-check-input" type="checkbox" asp-for="DongYDieuLe" id="checkDongY">
+                            <label class="form-check-label" for="checkDongY">
+                                Tôi đã đọc và đồng ý với <a href="#" class="text-decoration-none text-primary">Các Điều khoản & Chính sách</a> của HUIT Food.
+                            </label>
+                            <br/>
+                            <span asp-validation-for="DongYDieuLe" class="text-danger small"></span>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+                        {
+                            <div class="alert alert-danger py-2 rounded-3">
+                                <ul class="mb-0 small ps-3">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-danger btn-lg w-100 mb-3 fw-bold rounded-pill border-0 shadow-sm">
+                            Đăng Ký Mở Quán
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-2">
+                        <p class="mb-0 text-muted">
+                            Đã có tài khoản Đối tác?
+                            <a href="/seller/DangNhap" class="fw-bold text-decoration-none text-danger">Đăng nhập tại đây</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Tạo map chứa ChiTietDieuLe
+            var policies = {};
+            @if(ViewBag.DieuLes != null)
+            {
+                foreach(var dle in ViewBag.DieuLes)
+                {
+                    <text>policies['@dle.MaDieuLe'] = '@Html.Raw(dle.ChiTietDieuLe?.Replace("'", "\\'"))';</text>
+                }
+            }
+
+            $('#MaDieuLe').change(function () {
+                var val = $(this).val();
+                if (val && policies[val]) {
+                    $('#policyText').text(policies[val]);
+                    $('#policyDescription').removeClass('d-none');
+                } else {
+                    $('#policyDescription').addClass('d-none');
+                }
+            });
+        });
+    </script>
+}
+

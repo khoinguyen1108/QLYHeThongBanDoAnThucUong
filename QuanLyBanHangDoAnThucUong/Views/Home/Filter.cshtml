@@ -1,0 +1,214 @@
+@model IEnumerable<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>
+@using QuanLyBanHangDoAnThucUong.Helpers;
+@{
+    ViewData["Title"] = "Tìm kiếm & Lọc quán ăn";
+    var citiesList = ViewBag.CitiesList as List<string> ?? new List<string>();
+    var selectedCities = ViewBag.SelectedCities as List<string> ?? new List<string>();
+    var wardsList = ViewBag.WardsList as List<string> ?? new List<string>();
+    var selectedWards = ViewBag.SelectedWards as List<string> ?? new List<string>();
+}
+
+<div class="filter-page py-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Cột trái: Search Filter & Recommendations -->
+            <div class="col-lg-3">
+                <div class="sticky-top" style="top: 100px;">
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4"><i class="bi bi-search text-danger me-2"></i>BỘ LỌC TÌM KIẾM</h5>
+                            
+                            <form id="filterForm" method="get" action="/filter">
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-muted">Từ khóa tìm kiếm</label>
+                                    <input type="text" name="searchString" class="form-control border-light bg-light" 
+                                           placeholder="Tên quán, món, thành phần..." value="@ViewBag.CurrentSearch">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-muted">Khu vực / Thành Phố</label>
+                                    <div class="city-checkboxes" style="max-height: 200px; overflow-y: auto;">
+                                        @foreach (var city in citiesList)
+                                        {
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="cities" value="@city" 
+                                                       id="city-@city.GetHashCode()" @(selectedCities.Contains(city) ? "checked" : "") onchange="this.form.submit()">
+                                                <label class="form-check-label small" for="city-@city.GetHashCode()">@city</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold small text-muted">Phường / Xã</label>
+                                    <div class="ward-checkboxes" style="max-height: 200px; overflow-y: auto;">
+                                        @foreach (var ward in wardsList)
+                                        {
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" name="wards" value="@ward" 
+                                                       id="ward-@ward.GetHashCode()" @(selectedWards.Contains(ward) ? "checked" : "") onchange="this.form.submit()">
+                                                <label class="form-check-label small" for="ward-@ward.GetHashCode()">@ward</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3 text-uppercase">Áp dụng bộ lọc</button>
+                                <a href="/filter" class="btn btn-link w-100 text-decoration-none text-muted small mt-2">Xóa tất cả</a>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Gợi ý thông minh Sidebar -->
+                    @{
+                        var recommendedFoods = ViewBag.RecommendedFoods as List<QuanLyBanHangDoAnThucUong.Models.Entities.MonAn>;
+                    }
+                    @if (recommendedFoods != null && recommendedFoods.Any())
+                    {
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-header bg-white pt-4 pb-0 border-0">
+                                <h6 class="fw-bold m-0"><i class="bi bi-magic text-primary me-2"></i>Gợi ý cho bạn</h6>
+                            </div>
+                            <div class="card-body p-3">
+                                @foreach (var food in recommendedFoods.Take(4))
+                                {
+                                    var firstVariant = food.BienTheMonAns.FirstOrDefault();
+                                    var storeSlug = SlugHelper.GenerateSlugOptimal(food.GianHang?.TenGianHang ?? "quan-an");
+                                    var citySlug = SlugHelper.GenerateSlugOptimal(food.GianHang?.ThanhPho ?? "khac");
+                                    
+                                    <a href="@Url.Action("StoreDetails", "Home", new { cityslug = citySlug, storeslug = storeSlug, id = food.GianHang?.MaGianHang })" class="text-decoration-none d-block mb-3 last-child-mb-0">
+                                        <div class="d-flex align-items-center p-2 rounded-3 hover-bg-light transition-all">
+                                            <img src="@(string.IsNullOrEmpty(firstVariant?.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{firstVariant.HinhAnhMonAn}")" 
+                                                 class="rounded-3 object-fit-cover shadow-sm" style="width: 50px; height: 50px; min-width: 50px;">
+                                            <div class="ms-3 overflow-hidden">
+                                                <div class="fw-bold text-dark small text-truncate" title="@food.TenMon">@food.TenMon</div>
+                                                <div class="text-danger fw-bold smaller">@(firstVariant != null ? String.Format("{0:0,0}đ", firstVariant.GiaBan) : "Hết hàng")</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Cột phải: Results -->
+            <div class="col-lg-9">
+                <!-- Sort Bar -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+                    <div class="card-body p-3 d-flex align-items-center flex-wrap">
+                        <span class="text-muted me-4 small fw-bold">Sắp xếp theo:</span>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="@Url.Action("Filter", new { searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = "relevancy" })" 
+                               class="btn btn-sm px-4 rounded-3 @(ViewBag.SortBy == "relevancy" || string.IsNullOrEmpty(ViewBag.SortBy) ? "btn-danger" : "btn-white bg-white border-0 shadow-sm")">Liên quan</a>
+                            
+                            <a href="@Url.Action("Filter", new { searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = "ctime" })" 
+                               class="btn btn-sm px-4 rounded-3 @(ViewBag.SortBy == "ctime" ? "btn-danger" : "btn-white bg-white border-0 shadow-sm")">Mới nhất</a>
+                            
+                            <a href="@Url.Action("Filter", new { searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = "sales" })" 
+                               class="btn btn-sm px-4 rounded-3 @(ViewBag.SortBy == "sales" ? "btn-danger" : "btn-white bg-white border-0 shadow-sm")">Bán chạy</a>
+                            
+                            <div class="dropdown">
+                                <button class="btn btn-sm px-4 rounded-3 bg-white border-0 shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Giá: @(ViewBag.SortBy == "price" ? (ViewBag.Order == "asc" ? "Thấp đến Cao" : "Cao đến Thấp") : "Chọn")
+                                </button>
+                                <ul class="dropdown-menu border-0 shadow">
+                                    <li><a class="dropdown-item" href="@Url.Action("Filter", new { searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = "price", order = "asc" })">Giá: Thấp đến Cao</a></li>
+                                    <li><a class="dropdown-item" href="@Url.Action("Filter", new { searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = "price", order = "desc" })">Giá: Cao đến Thấp</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store List -->
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="120" class="mb-3 opacity-50">
+                        <h4 class="fw-bold text-muted">Không tìm thấy quán nào</h4>
+                        <p class="text-muted">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                        @foreach (var item in Model)
+                        {
+                            var storeSlug = SlugHelper.GenerateSlugOptimal(item.TenGianHang ?? "quan-an-" + item.MaGianHang);
+                            var citySlug = SlugHelper.GenerateSlugOptimal(item.ThanhPho ?? "khac");
+                            
+                            <div class="col">
+                                <a href="@Url.Action("StoreDetails", "Home", new { cityslug = citySlug, storeslug = storeSlug, id = item.MaGianHang })" class="text-decoration-none text-dark h-100 d-block">
+                                    <div class="card h-100 store-card shadow-sm border-0 rounded-4 overflow-hidden">
+                                        <div class="position-relative" style="height: 160px;">
+                                            <img src="@(string.IsNullOrEmpty(item.HinhAnh) ? "/images/default_store.jpg" : $"/images/gianhang/{item.HinhAnh}")" 
+                                                 class="w-100 h-100 object-fit-cover" alt="@item.TenGianHang">
+                                            @if(item.TrangThaiGianHang != "Mở cửa") {
+                                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background:rgba(0,0,0,0.5)">
+                                                    <span class="badge bg-secondary">Tạm đóng</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <h6 class="fw-bold mb-1 text-truncate">@item.TenGianHang</h6>
+                                            <p class="small text-muted mb-2 text-truncate"><i class="bi bi-geo-alt"></i> @item.ThanhPho</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> @(item.DanhGiaTB?.ToString("0.0") ?? "0")</span>
+                                                <span class="text-danger small fw-bold">Free Ship</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Phân trang -->
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav class="mt-5">
+                            <ul class="pagination justify-content-center">
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link shadow-sm border-0 mx-1 rounded-3" 
+                                           style="@(i == ViewBag.CurrentPage ? "background-color:#f05023; border-color:#f05023;" : "color:#333")"
+                                           href="@Url.Action("Filter", new { page = i, searchString = ViewBag.CurrentSearch, cities = selectedCities, sortBy = ViewBag.SortBy, order = ViewBag.Order })">@i</a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-bg-light:hover {
+        background-color: #f8f9fa;
+    }
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+    .smaller {
+        font-size: 0.8rem;
+    }
+    .last-child-mb-0:last-child {
+        margin-bottom: 0 !important;
+    }
+    .store-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .store-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+
+
+

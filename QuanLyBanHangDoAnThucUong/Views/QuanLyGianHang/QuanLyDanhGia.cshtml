@@ -1,0 +1,189 @@
+﻿@model IEnumerable<QuanLyBanHangDoAnThucUong.Models.Entities.DanhGiaMonAn>
+
+@{
+    ViewData["Title"] = "Quản Lý Đánh Giá";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <!-- Main Content Header -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card-body p-4 text-white">
+                <h3 class="fw-bold mb-1"><i class="bi bi-star-fill me-2"></i>Quản Lý Đánh Giá Của Khách Hàng</h3>
+                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Xem và phản hồi đánh giá để nâng cao uy tín cho gian hàng của bạn.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-chat-square-text fs-1 d-block mb-3"></i>
+                        <h5>Chưa có đánh giá nào</h5>
+                        <p>Gian hàng của bạn hiện chưa nhận được đánh giá nào từ khách hàng.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        @foreach (var item in Model)
+                        {
+                            <div class="col-md-6 mb-4">
+                                <div class="card border-0 shadow-sm rounded-4 h-100 hover-card">
+                                    <div class="card-body p-4">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 45px; height: 45px; font-size: 1.2rem;">
+                                                    @(string.IsNullOrEmpty(item.KhachHang?.TenKH) ? "U" : item.KhachHang.TenKH.Substring(0,1).ToUpper())
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold">@item.KhachHang?.TenKH</h6>
+                                                    <small class="text-muted">@item.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")</small>
+                                                </div>
+                                            </div>
+                                            <div class="text-warning">
+                                                @for (int i = 0; i < item.SoSao; i++)
+                                                {
+                                                    <i class="bi bi-star-fill"></i>
+                                                }
+                                                @for (int i = item.SoSao; i < 5; i++)
+                                                {
+                                                    <i class="bi bi-star text-muted"></i>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <span class="badge bg-light text-dark border mb-2"><i class="bi bi-tag me-1"></i>Món: @item.MonAn?.TenMon</span>
+                                            <p class="mb-0 text-dark">"@item.NoiDung"</p>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(item.PhanHoiCuaDoiTac))
+                                        {
+                                            <div class="bg-light p-3 rounded-3 mt-3 border-start border-4 border-success">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong class="text-success"><i class="bi bi-shop me-1"></i>Phản hồi của quán</strong>
+                                                    <small class="text-muted">@item.NgayPhanHoi?.ToString("dd/MM/yyyy HH:mm")</small>
+                                                </div>
+                                                <p class="mb-0 small">@item.PhanHoiCuaDoiTac</p>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="mt-3 text-end" id="btn-group-@item.MaDanhGia">
+                                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="toggleReplyForm(@item.MaDanhGia)">
+                                                    <i class="bi bi-reply me-1"></i> Trả lời
+                                                </button>
+                                            </div>
+
+                                            <div id="reply-form-@item.MaDanhGia" class="mt-3 d-none">
+                                                <textarea id="reply-text-@item.MaDanhGia" class="form-control rounded-3 mb-2" rows="2" placeholder="Nhập phản hồi của bạn..."></textarea>
+                                                <div class="text-end">
+                                                    <button class="btn btn-sm btn-secondary rounded-pill px-3 me-2" onclick="toggleReplyForm(@item.MaDanhGia)">Hủy</button>
+                                                    <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="submitReply(@item.MaDanhGia)">Gửi phản hồi</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="reply-success-@item.MaDanhGia" class="bg-light p-3 rounded-3 mt-3 border-start border-4 border-success d-none">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <strong class="text-success"><i class="bi bi-shop me-1"></i>Phản hồi của quán</strong>
+                                                    <small class="text-muted" id="reply-time-@item.MaDanhGia"></small>
+                                                </div>
+                                                <p class="mb-0 small" id="reply-content-@item.MaDanhGia"></p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function toggleReplyForm(id) {
+            const form = document.getElementById(`reply-form-${id}`);
+            const btnGroup = document.getElementById(`btn-group-${id}`);
+            
+            if (form.classList.contains('d-none')) {
+                form.classList.remove('d-none');
+                btnGroup.classList.add('d-none');
+            } else {
+                form.classList.add('d-none');
+                btnGroup.classList.remove('d-none');
+            }
+        }
+
+        function submitReply(id) {
+            const content = document.getElementById(`reply-text-${id}`).value;
+            if (!content || content.trim() === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Lỗi',
+                    text: 'Vui lòng nhập nội dung phản hồi!'
+                });
+                return;
+            }
+
+            $.ajax({
+                url: '/QuanLyGianHang/PhanHoiDanhGia',
+                type: 'POST',
+                data: {
+                    maDanhGia: id,
+                    noiDung: content
+                },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thành công',
+                            text: 'Đã gửi phản hồi thành công!',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        // Cập nhật giao diện mà không load lại trang
+                        document.getElementById(`reply-form-${id}`).classList.add('d-none');
+                        
+                        const successDiv = document.getElementById(`reply-success-${id}`);
+                        successDiv.classList.remove('d-none');
+                        
+                        document.getElementById(`reply-time-${id}`).innerText = res.ngayPhanHoi;
+                        document.getElementById(`reply-content-${id}`).innerText = content;
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: res.message || 'Có lỗi xảy ra khi gửi phản hồi'
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Lỗi kết nối máy chủ'
+                    });
+                }
+            });
+        }
+    </script>
+}
+
+

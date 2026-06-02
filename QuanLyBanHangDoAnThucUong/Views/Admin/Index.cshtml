@@ -1,0 +1,328 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    dynamic dashboard = ViewBag.Dashboard;
+    var tongDoanhThu = ViewBag.TongDoanhThu as decimal? ?? 0;
+    var doanhThuThangNay = ViewBag.DoanhThuThangNay as decimal? ?? 0;
+    var doanhThuHomNay = ViewBag.DoanhThuHomNay as decimal? ?? 0;
+    var chartLabels = ViewBag.Last7DaysLabels as List<string> ?? new List<string>();
+    var chartData = ViewBag.Last7DaysRevenues as List<decimal> ?? new List<decimal>();
+}
+
+<div style="margin-left: 250px; margin-top: 20px;" class="pb-5">
+    <div class="container-fluid px-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold m-0 text-dark">📊 Dashboard Quản Lý</h1>
+                <p class="text-muted mb-0">Chào mừng trở lại, Quản trị viên hệ thống.</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-bold">
+                    <i class="bi bi-calendar3 me-1 text-primary"></i> Hôm nay: @DateTime.Now.ToString("dd/MM/yyyy")
+                </span>
+            </div>
+        </div>
+
+        <!-- Row 1: Doanh Thu Panel (Premium Design) -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
+                     style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Tổng doanh thu</h6>
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-wallet2 fs-5"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">@tongDoanhThu.ToString("N0")đ</h2>
+                        <p class="small mb-0 opacity-75">Tất cả đơn hàng hoàn thành</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
+                     style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Doanh thu tháng này</h6>
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-calendar-check fs-5"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">@doanhThuThangNay.ToString("N0")đ</h2>
+                        <p class="small mb-0 opacity-75">Từ đầu tháng @DateTime.Now.ToString("MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
+                     style="background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Doanh thu hôm nay</h6>
+                            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-speedometer fs-5"></i>
+                            </div>
+                        </div>
+                        <h2 class="fw-bold mb-1">@doanhThuHomNay.ToString("N0")đ</h2>
+                        <p class="small mb-0 opacity-75">Cập nhật theo thời gian thực</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Stats Grid -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-4 p-3 me-3">
+                            <i class="bi bi-cart3 fs-3"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0 text-dark">@dashboard.TongDonHang</h3>
+                            <span class="text-muted small">Tổng Đơn Hàng</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 text-success rounded-4 p-3 me-3">
+                            <i class="bi bi-shop fs-3"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0 text-dark">@dashboard.TongGianHang</h3>
+                            <span class="text-muted small">Gian Hàng (@dashboard.GianHangMoCua mở)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 text-info rounded-4 p-3 me-3">
+                            <i class="bi bi-people fs-3"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0 text-dark">@dashboard.TongKhachHang</h3>
+                            <span class="text-muted small">Khách Hàng</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-4 p-3 me-3">
+                            <i class="bi bi-lock fs-3"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-0 text-dark">@dashboard.TongTaiKhoan</h3>
+                            <span class="text-muted small">Tài Khoản</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Biểu Đồ Doanh Thu (7 Ngày Qua)</h5>
+                        </div>
+                        <div style="height: 350px;">
+                            <canvas id="adminRevenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4: Recent Orders & Quick Stats -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-shop text-primary me-2"></i>🤝 Đối Tác Mới Tham Gia</h5>
+                            <a asp-action="QuanLyDoiTac" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Xem tất cả</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="py-3">Mã ĐT</th>
+                                        <th class="py-3">Đối Tác & Email</th>
+                                        <th class="py-3">Số ĐT</th>
+                                        <th class="py-3 text-center">Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if(ViewBag.RecentPartners != null)
+                                    {
+                                        foreach(var partner in ViewBag.RecentPartners)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold py-3">#@partner.MaDoiTac</td>
+                                                <td>
+                                                    <div class="fw-bold">@partner.TenQuanDoiTac</div>
+                                                    <div class="text-muted small">@partner.EmailDTac</div>
+                                                </td>
+                                                <td>@partner.SoDTDoiTac</td>
+                                                <td class="text-center">
+                                                    @if(partner.TrangThaiDoiTac == "Còn đang hoạt động")
+                                                    {
+                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">Đang hoạt động</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill text-dark">@partner.TrangThaiDoiTac</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-dark mb-4"><i class="bi bi-sliders text-primary me-2"></i>📈 Thống Kê Hệ Thống</h5>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Đối tác đang hoạt động</span>
+                                <span class="fw-bold small text-dark">@dashboard.DoiTacHoatDong / @dashboard.TongDoiTac</span>
+                            </div>
+                            <div class="progress rounded-pill" style="height: 8px;">
+                                @{
+                                    var percentDoiTac = dashboard.TongDoiTac > 0 ? (double)dashboard.DoiTacHoatDong / dashboard.TongDoiTac * 100 : 0;
+                                }
+                                <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: @percentDoiTac%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Gian hàng đang mở cửa</span>
+                                <span class="fw-bold small text-dark">@dashboard.GianHangMoCua / @dashboard.TongGianHang</span>
+                            </div>
+                            <div class="progress rounded-pill" style="height: 8px;">
+                                @{
+                                    var percentGianHang = dashboard.TongGianHang > 0 ? (double)dashboard.GianHangMoCua / dashboard.TongGianHang * 100 : 0;
+                                }
+                                <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: @percentGianHang%"></div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-4">
+                            <h6 class="fw-bold text-dark mb-3">⚡ Phím Tắt Nhanh</h6>
+                            <div class="d-grid gap-2">
+                                <a href="/admin/quanlygianhang" class="btn btn-light border text-start py-2.5 rounded-3 text-dark small fw-bold">
+                                    <i class="bi bi-shop text-primary me-2"></i> Quản lý Gian Hàng
+                                </a>
+                                <a href="/admin/quanlymonan" class="btn btn-light border text-start py-2.5 rounded-3 text-dark small fw-bold">
+                                    <i class="bi bi-egg-fried text-success me-2"></i> Quản lý Món Ăn
+                                </a>
+                                <a href="/admin/quanlykhuyenmai" class="btn btn-light border text-start py-2.5 rounded-3 text-dark small fw-bold">
+                                    <i class="bi bi-gift text-danger me-2"></i> Cấu hình Khuyến Mãi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var chartLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartLabels));
+        var chartData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartData));
+
+        if(chartLabels && chartLabels.length > 0 && chartData && chartData.length > 0) {
+            const ctx = document.getElementById('adminRevenueChart').getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+            gradient.addColorStop(0, 'rgba(42, 82, 152, 0.5)'); // match premium primary
+            gradient.addColorStop(1, 'rgba(42, 82, 152, 0.0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: chartData,
+                        borderColor: '#2a5298',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2a5298',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
+                            ticks: {
+                                callback: function(value) {
+                                    if(value >= 1000000) return (value / 1000000).toFixed(1) + ' Tr';
+                                    if(value >= 1000) return (value / 1000).toFixed(0) + ' k';
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+    });
+</script>

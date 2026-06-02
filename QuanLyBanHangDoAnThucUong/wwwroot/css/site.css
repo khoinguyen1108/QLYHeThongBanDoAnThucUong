@@ -1,0 +1,105 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* CUSTOM */
+.form-control:focus {
+    border-color: #0d6efd !important;
+    box-shadow: none;
+}
+
+#togglePassword {
+    border: none !important;
+    background: transparent !important;
+}
+
+#togglePassword:focus,
+#togglePassword:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== SHOPEE FOOD STYLES ===== */
+:root {
+  --primary-color: #f05023;
+  --primary-hover: #e0441d;
+  --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: #f8f9fa;
+}
+
+/* Utilities */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+}
+.transition-hover {
+  transition: all 0.3s ease;
+}
+.transition-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+.transition-zoom {
+  transition: transform 0.5s ease;
+}
+.transition-hover:hover .transition-zoom {
+  transform: scale(1.05);
+}
+
+/* Store Details */
+.list-group-item.active {
+    background-color: #fef0ed;
+    color: var(--primary-color);
+    border-color: #fef0ed;
+    border-left: 4px solid var(--primary-color);
+}
+.food-item-card {
+    border-radius: 12px;
+}
+.food-item-card:hover {
+    border-color: var(--primary-color) !important;
+    background-color: #fffaf9 !important;
+}
+.food-item-card .btn-primary {
+    background-color: #fff !important;
+    color: var(--primary-color) !important;
+    border: 1px solid var(--primary-color) !important;
+}
+.food-item-card:hover .btn-primary {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+/* Scrollspy override */
+.menu-category {
+    scroll-margin-top: 100px;
+}

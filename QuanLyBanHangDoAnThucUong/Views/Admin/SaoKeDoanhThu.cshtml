@@ -1,0 +1,171 @@
+﻿@{
+    ViewData["Title"] = "Sao Kê Doanh Thu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<style>
+    /* Styling cho DataTable để trông hiện đại hơn */
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #0d6efd !important;
+        border-color: #0d6efd !important;
+        color: white !important;
+        border-radius: 5px;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transition: background-color 0.2s ease;
+    }
+    .text-khach-tra {
+        color: #198754; /* Xanh lá */
+        font-weight: bold;
+    }
+    .text-quan-nhan {
+        color: #0dcaf0; /* Xanh dương / Cyan */
+        font-weight: bold;
+    }
+    .page-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div style="margin-left: 250px; margin-top: 20px;" class="pb-5">
+    <div class="container-fluid px-4">
+        
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-wallet2 me-2"></i> Sao Kê Doanh Thu</h2>
+                <p class="mb-0 opacity-75">Bảng sao kê chi tiết dòng tiền của tất cả các đơn hàng hoàn thành</p>
+            </div>
+            <a href="/Admin/Index" class="btn btn-light btn-sm fw-bold rounded-pill px-4 py-2 text-primary shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+
+        
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <form id="filterForm" class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Từ ngày</label>
+                        <input type="date" class="form-control" id="tuNgay" name="tuNgay">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Đến ngày</label>
+                        <input type="date" class="form-control" id="denNgay" name="denNgay">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Tiền tối thiểu (đ)</label>
+                        <input type="number" class="form-control" id="minAmount" name="minAmount" placeholder="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Tiền tối đa (đ)</label>
+                        <input type="number" class="form-control" id="maxAmount" name="maxAmount" placeholder="999999999">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Sắp xếp (Khách trả)</label>
+                        <select class="form-select" id="sortOrder" name="sortOrder">
+                            <option value="desc_date">Mới nhất</option>
+                            <option value="asc">Số tiền thấp đến cao</option>
+                            <option value="desc">Số tiền cao đến thấp</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-funnel"></i> Lọc</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table id="tblSaoKe" class="table table-hover align-middle border-bottom" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Ngày Tạo</th>
+                                <th>Tổng Tiền Món</th>
+                                <th>Giảm Giá</th>
+                                <th>Phí DV Sàn</th>
+                                <th>Phí Ship</th>
+                                <th>Khách Trả</th>
+                                <th>Quán Nhận</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#tblSaoKe').DataTable({
+                "serverSide": true,
+                "processing": true,
+                                "ajax": {
+                    "url": "/Admin/GetDoanhThuData",
+                    "type": "POST",
+                    "data": function(d) {
+                        d.tuNgay = $('#tuNgay').val();
+                        d.denNgay = $('#denNgay').val();
+                        d.minAmount = $('#minAmount').val();
+                        d.maxAmount = $('#maxAmount').val();
+                        d.sortOrder = $('#sortOrder').val();
+                    }
+                },
+                "columns": [
+                    { "data": "maDonHang", "name": "Mã Đơn", "className": "fw-bold text-center" },
+                    { "data": "ngayTao", "name": "Ngày Tạo" },
+                    { "data": "tongTienMon", "name": "Tổng Tiền Món", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ') },
+                    { "data": "giamGia", "name": "Giảm Giá", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ'), "className": "text-danger" },
+                    { "data": "phiDichVuSan", "name": "Phí DV Sàn", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ') },
+                    { "data": "phiShip", "name": "Phí Ship", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ') },
+                    { 
+                        "data": "thanhTienKhachTra", 
+                        "name": "Khách Trả",
+                        "className": "text-khach-tra",
+                        "render": $.fn.dataTable.render.number(',', '.', 0, '', 'đ')
+                    },
+                    { 
+                        "data": "thanhTienQuanNhan", 
+                        "name": "Quán Nhận",
+                        "className": "text-quan-nhan",
+                        "render": $.fn.dataTable.render.number(',', '.', 0, '', 'đ')
+                    }
+                ],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+                },
+                "order": [[1, "desc"]], /* Sắp xếp mặc định theo Ngày Tạo giảm dần */
+                "searching": true,
+                "ordering": false /* Server side pagination đơn giản, tắt ordering cột để tránh lỗi nếu không xử lý sort ở backend */
+            });
+        
+        $('#filterForm').submit(function(e) {
+            e.preventDefault();
+            $('#tblSaoKe').DataTable().ajax.reload();
+        });
+        });
+    </script>
+}
+
+

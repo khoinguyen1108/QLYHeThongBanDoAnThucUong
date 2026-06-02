@@ -1,0 +1,393 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<GianHang>
+
+@{
+    ViewData["Title"] = "Quản Lý Gian Hàng";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0 fw-bold"><i class="bi bi-shop text-primary me-2"></i>🏬 Quản Lý Gian Hàng</h2>
+            <div class="badge bg-primary fs-5 px-4 py-2 shadow-sm rounded-pill">
+                Tổng: @ViewBag.TotalCount gian hàng
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="card shadow border-0 rounded-4 mb-4 bg-white">
+            <div class="card-body p-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="gianHangSearchInput" class="form-control bg-light border-start-0 border-light" placeholder="Tìm kiếm tên gian hàng, đối tác...">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button id="btnResetFilters" class="btn btn-outline-secondary rounded-pill px-3 fw-bold"><i class="bi bi-arrow-counterclockwise me-1"></i>Đặt lại</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0" id="gianHangTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="py-3 sortable" style="cursor: pointer;"># <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                            <th class="py-3 sortable" style="cursor: pointer;">Tên Gian Hàng <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                            <th class="py-3 sortable" style="cursor: pointer;">Đối Tác <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                            <th class="py-3 text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Không có dữ liệu</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var gianHang in Model)
+                            {
+                                <tr>
+                                    <td>@gianHang.MaGianHang</td>
+                                    <td><strong>@gianHang.TenGianHang</strong></td>
+                                    <td>@gianHang.DoiTac?.TenQuanDoiTac</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalGH-@gianHang.MaGianHang" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i> Chi tiết
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalDT-@gianHang.MaGianHang" title="Xem doanh thu tháng">
+                                            <i class="bi bi-graph-up"></i> Doanh thu
+                                        </button>
+
+                                        <!-- Modal Chi tiết -->
+                                        <div class="modal fade" id="modalGH-@gianHang.MaGianHang" tabindex="-1" aria-hidden="true">
+                                          <div class="modal-dialog">
+                                            <div class="modal-content text-start">
+                                              <div class="modal-header">
+                                                <h5 class="modal-title fw-bold">Chi tiết Gian Hàng #@gianHang.MaGianHang</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                              </div>
+                                              <div class="modal-body">
+                                                <p><strong>Tên Gian Hàng:</strong> @gianHang.TenGianHang</p>
+                                                <p><strong>Địa Chỉ:</strong> @gianHang.DiaChiCuThe</p>
+                                                <p><strong>Giờ Hoạt Động:</strong> @gianHang.GioMo.ToString("hh\\:mm") - @gianHang.GioDong.ToString("hh\\:mm")</p>
+                                                <p><strong>Điều Lệ:</strong> <span class="badge bg-info">@gianHang.DieuLe?.TenDieuLe</span></p>
+                                                <p><strong>Trạng Thái:</strong> 
+                                                    <span class="badge bg-@(gianHang.TrangThaiGianHang == "Mở cửa" ? "success" : gianHang.TrangThaiGianHang == "Tạm ngưng" ? "warning" : "danger")">
+                                                        @gianHang.TrangThaiGianHang
+                                                    </span>
+                                                </p>
+                                              </div>
+                                              <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <!-- Modal Doanh Thu -->
+                                        <div class="modal fade" id="modalDT-@gianHang.MaGianHang" tabindex="-1" aria-hidden="true">
+                                          <div class="modal-dialog modal-lg">
+                                            <div class="modal-content text-start">
+                                              <div class="modal-header bg-success text-white">
+                                                <h5 class="modal-title fw-bold"><i class="bi bi-graph-up me-2"></i>Doanh Thu - @gianHang.TenGianHang</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                              </div>
+                                              <div class="modal-body" id="dtBody-@gianHang.MaGianHang">
+                                                <div class="text-center py-4"><div class="spinner-border text-success"></div><p class="mt-2 text-muted">Đang tải dữ liệu...</p></div>
+                                              </div>
+                                              <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="QuanLyGianHang" asp-route-page="1">Đầu Tiên</a>
+                                </li>
+                            }
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="QuanLyGianHang" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="QuanLyGianHang" asp-route-page="@ViewBag.TotalPages">Cuối Cùng</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+
+                <!-- Removed Bottom Total -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { overflow-x: hidden; }
+</style>
+
+@section Scripts {
+    <script>
+    $(function() {
+        // Load doanh thu khi mở modal
+        @foreach (var gh in Model)
+        {
+            <text>
+            document.getElementById('modalDT-@gh.MaGianHang')?.addEventListener('show.bs.modal', function() {
+                loadDoanhThu(@gh.MaGianHang);
+            });
+            </text>
+        }
+
+        // Dynamically import Chart.js if not loaded
+        if (typeof Chart === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            document.head.appendChild(script);
+        }
+
+        function loadDoanhThu(maGianHang, thang, nam) {
+            var targetEl = document.getElementById('dtBody-' + maGianHang);
+            if (!targetEl) return;
+
+            var url = '/Admin/GetDoanhThu?maGianHang=' + maGianHang;
+            if (thang) url += '&thang=' + thang;
+            if (nam) url += '&nam=' + nam;
+
+            $.getJSON(url, function(data) {
+                var dailyHtml = '';
+                if (data.dailyRevenue) {
+                    data.dailyRevenue.forEach(d => {
+                        var pct = data.tongDoanhThu > 0 ? Math.round(d.doanhThu * 100 / data.tongDoanhThu) : 0;
+                        dailyHtml += `
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="small me-2" style="width:45px">${d.ngay}</span>
+                            <div class="progress flex-grow-1" style="height:14px;">
+                                <div class="progress-bar bg-success" style="width:${pct}%"></div>
+                            </div>
+                            <span class="small ms-2 fw-bold text-success" style="min-width:80px;text-align:right">${Number(d.doanhThu).toLocaleString('vi-VN')}đ</span>
+                        </div>`;
+                    });
+                }
+
+                targetEl.innerHTML = `
+                    <div class="row mb-4 align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold mb-0">Tháng ${data.thangHienTai}</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <select class="form-select" id="selMonth-${maGianHang}">
+                                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}" ${data.thangHienTai.startsWith((i+1).toString().padStart(2,'0')) ? 'selected' : ''}>Tháng ${i+1}</option>`).join('')}
+                                </select>
+                                <select class="form-select" id="selYear-${maGianHang}">
+                                    ${[2024, 2025, 2026].map(y => `<option value="${y}" ${data.thangHienTai.endsWith(y) ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                                <button class="btn btn-primary" onclick="loadDoanhThu(${maGianHang}, $('#selMonth-${maGianHang}').val(), $('#selYear-${maGianHang}').val())">Lọc</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light rounded-3 p-3 shadow-sm">
+                                <h4 class="fw-bold text-success mb-0">${Number(data.tongDoanhThu).toLocaleString('vi-VN')}đ</h4>
+                                <small class="text-muted fw-semibold">Tổng doanh thu</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light rounded-3 p-3 shadow-sm">
+                                <h4 class="fw-bold text-primary mb-0">${data.tongDonHang}</h4>
+                                <small class="text-muted fw-semibold">Tổng đơn hàng</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light rounded-3 p-3 shadow-sm">
+                                <h4 class="fw-bold text-info mb-0">${data.donThanhCong}</h4>
+                                <small class="text-muted fw-semibold">Hoàn thành</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-0 bg-light rounded-3 p-3 shadow-sm">
+                                <h4 class="fw-bold text-warning mb-0">${data.donChoXuLy}</h4>
+                                <small class="text-muted fw-semibold">Đang xử lý</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3"><i class="bi bi-graph-up-linear me-1 text-success"></i>Biểu đồ xu hướng doanh thu trong tháng</h6>
+                    <div class="mb-4 bg-white p-3 rounded-3 shadow-sm border" style="height: 220px; position: relative;">
+                        <canvas id="chart-${maGianHang}"></canvas>
+                    </div>
+
+                    <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart-line me-1 text-success"></i>Chi tiết doanh thu theo ngày</h6>
+                    <div class="bg-light p-3 rounded-3" style="max-height: 200px; overflow-y: auto;">
+                        ${dailyHtml || '<p class="text-center text-muted my-4">Không có dữ liệu cho tháng này</p>'}
+                    </div>
+                `;
+
+                // Render Chart.js dynamically
+                setTimeout(function() {
+                    var canvas = document.getElementById('chart-' + maGianHang);
+                    if (!canvas) return;
+                    var ctx = canvas.getContext('2d');
+                    var labels = data.dailyRevenue ? data.dailyRevenue.map(d => 'Ngày ' + d.ngay) : [];
+                    var values = data.dailyRevenue ? data.dailyRevenue.map(d => d.doanhThu) : [];
+
+                    if (window['chartInstance_' + maGianHang]) {
+                        window['chartInstance_' + maGianHang].destroy();
+                    }
+
+                    window['chartInstance_' + maGianHang] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Doanh thu',
+                                data: values,
+                                borderColor: '#198754',
+                                backgroundColor: 'rgba(25, 135, 84, 0.12)',
+                                borderWidth: 2.5,
+                                fill: true,
+                                tension: 0.35,
+                                pointBackgroundColor: '#198754',
+                                pointRadius: labels.length > 15 ? 0 : 3,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return ' ' + context.raw.toLocaleString('vi-VN') + 'đ';
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value >= 1000000 ? (value / 1000000) + 'M' : value >= 1000 ? (value / 1000) + 'k' : value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 200);
+
+            }).fail(function() {
+                targetEl.innerHTML = '<div class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">Lỗi tải dữ liệu</p></div>';
+            });
+        }
+
+        window.loadDoanhThu = loadDoanhThu; // Expose to global scope
+
+        // Search Filter for Gian Hang
+        $('#gianHangSearchInput').on('keyup', function() {
+            var value = $(this).val().toLowerCase().trim();
+            $('#gianHangTable tbody tr').each(function() {
+                var row = $(this);
+                if (row.find('td').length > 1) {
+                    var text = row.text().toLowerCase();
+                    if (text.indexOf(value) > -1) {
+                        row.show();
+                    } else {
+                        row.hide();
+                    }
+                }
+            });
+        });
+
+        // Reset Filter
+        $('#btnResetFilters').click(function() {
+            $('#gianHangSearchInput').val('');
+            $('#gianHangTable tbody tr').show();
+        });
+
+        // Sorting for Gian Hang table
+        $('#gianHangTable .sortable').click(function() {
+            var th = $(this);
+            var table = th.closest('table');
+            var tbody = table.find('tbody');
+            var rows = tbody.find('tr').toArray();
+            var index = th.index();
+            var ascending = !th.hasClass('asc');
+
+            table.find('th').removeClass('asc desc');
+            th.toggleClass('asc', ascending).toggleClass('desc', !ascending);
+
+            rows.sort(function(a, b) {
+                var cellA = $(a).children('td').eq(index).text().trim();
+                var cellB = $(b).children('td').eq(index).text().trim();
+
+                // Numeric sorting
+                if (!isNaN(cellA) && !isNaN(cellB)) {
+                    return ascending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
+                }
+
+                return ascending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+            });
+
+            $.each(rows, function(index, row) {
+                tbody.append(row);
+            });
+        });
+    });
+    </script>
+
+    <style>
+        .sortable:hover {
+            background-color: #2c3034 !important;
+            color: #ffc107 !important;
+        }
+        .sortable.asc i::before {
+            content: "\f124";
+            font-family: "bootstrap-icons";
+            opacity: 1 !important;
+        }
+        .sortable.desc i::before {
+            content: "\f121";
+            font-family: "bootstrap-icons";
+            opacity: 1 !important;
+        }
+    </style>
+}
+

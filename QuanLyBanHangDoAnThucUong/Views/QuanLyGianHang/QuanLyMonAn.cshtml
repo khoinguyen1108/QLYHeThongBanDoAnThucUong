@@ -1,0 +1,306 @@
+﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
+
+@{
+    ViewData["Title"] = "Quản Lý Món Ăn";
+    var danhSachChiNhanh = ViewBag.DanhSachChiNhanh as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+    var monAns = ViewBag.MonAns as List<QuanLyBanHangDoAnThucUong.Models.Entities.MonAn>;
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-dark fw-bold mb-1"><i class="bi bi-egg-fried text-success me-2"></i>Quản Lý Món Ăn</h2>
+                <p class="text-muted small mb-0">Quản lý thực đơn và các biến thể món ăn của hệ thống</p>
+            </div>
+            <a asp-action="ThemMonAn" class="btn btn-success rounded-pill px-4">
+                <i class="bi bi-plus-circle me-1"></i> Thêm Món Ăn Mới
+            </a>
+        </div>
+
+        <!-- Quick Summary Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white hover-lift">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="p-3 rounded-3 me-3" style="background-color: rgba(13, 110, 253, 0.12) !important; color: #0d6efd !important;">
+                            <i class="bi bi-list-ul fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">@ViewBag.TotalTheLoai</h4>
+                            <p class="text-muted mb-0 small fw-bold">TỔNG SỐ PHÂN LOẠI MÓN</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white hover-lift">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3 text-success me-3">
+                            <i class="bi bi-check-circle fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">@ViewBag.TotalDangBan</h4>
+                            <p class="text-muted mb-0 small fw-bold">MÓN ĐANG BÁN</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white hover-lift">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 text-danger me-3">
+                            <i class="bi bi-exclamation-triangle fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">@ViewBag.TotalHetMon</h4>
+                            <p class="text-muted mb-0 small fw-bold">HẾT MÓN / HẾT HÀNG</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bộ Lọc -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <form method="get" action="/QuanLyGianHang/QuanLyMonAn" class="row g-3 align-items-end">
+                    <input type="hidden" name="status" value="@ViewBag.Status" />
+                    
+                    
+                    <div class="col-md-6 mb-2 mb-md-0">
+                        <label class="form-label fw-bold small text-muted">TÌM KIẾM MÓN ĂN</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="menuSearchInput" class="form-control border-start-0 ps-0 bg-white" placeholder="Tìm kiếm tên món ăn, mô tả...">
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <a href="/QuanLyGianHang/QuanLyMonAn" class="btn btn-light px-3 w-100" title="Đặt lại bộ lọc"><i class="bi bi-arrow-clockwise me-1"></i> Đặt lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Nav Pills cho Trạng Thái Món -->
+        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 shadow-sm">
+            <li class="nav-item flex-fill text-center">
+                <a class="nav-link fw-bold @(string.IsNullOrEmpty(ViewBag.Status) ? "active rounded-pill" : "text-dark")" 
+                   href="/QuanLyGianHang/QuanLyMonAn?status=">
+                    Tất cả món ăn
+                </a>
+            </li>
+            <li class="nav-item flex-fill text-center">
+                <a class="nav-link fw-bold @(ViewBag.Status == "Có sẵn" ? "active rounded-pill bg-success" : "text-dark")" 
+                   href="/QuanLyGianHang/QuanLyMonAn?status=Có sẵn">
+                    Đang Bán
+                </a>
+            </li>
+            <li class="nav-item flex-fill text-center">
+                <a class="nav-link fw-bold @(ViewBag.Status == "Hết món" ? "active rounded-pill bg-danger" : "text-dark")" 
+                   href="/QuanLyGianHang/QuanLyMonAn?status=Hết món">
+                    Hết Món / Tạm Ngưng
+                </a>
+            </li>
+        </ul>
+
+        <!-- Compact Dish List -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="dishTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">Hình ảnh</th>
+                            <th>Tên Món Ăn</th>
+                            <th>Thể Loại</th>
+                            <th>Mô tả / Biến thể</th>
+                            <th>Giá Bán</th>
+                            <th class="text-center">Số Lượng</th>
+                            <th>Trạng Thái</th>
+                            <th class="text-end pe-4" style="width: 150px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (monAns == null || monAns.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-egg fs-1 d-block mb-2"></i>
+                                    Không tìm thấy món ăn nào phù hợp với bộ lọc.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var mon in monAns)
+                            {
+                                foreach (var bienThe in mon.BienTheMonAns)
+                                {
+                                    <tr class="dish-row">
+                                        <td class="ps-4">
+                                            <img src="@(string.IsNullOrEmpty(bienThe.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{bienThe.HinhAnhMonAn}")" 
+                                                 alt="@mon.TenMon" 
+                                                 class="rounded-3" 
+                                                 style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #dee2e6;"
+                                                 onerror="this.src='/images/default_food.jpg'">
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark dish-name">@mon.TenMon</div>
+                                            <small class="text-muted">ID: #@mon.MaMonAn</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 dish-category">
+                                                @mon.TheLoaiMonAn?.TenLoai
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="small text-dark text-truncate" style="max-width: 250px;" title="@bienThe.MoTaMonAn">@bienThe.MoTaMonAn</div>
+                                            @if (!string.IsNullOrEmpty(bienThe.GhiChu))
+                                            {
+                                                <div class="small text-muted" style="font-size: 11px;"><i class="bi bi-pencil me-1"></i>@bienThe.GhiChu</div>
+                                            }
+                                        </td>
+                                        <td class="fw-bold text-success">
+                                            @bienThe.GiaBan.ToString("N0")đ
+                                        </td>
+                                        <td class="text-center font-monospace fw-semibold">
+                                            @bienThe.SoLuongMon
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill px-2 dish-status bg-@(bienThe.TrangThaiMonAn == "Còn bán" || bienThe.TrangThaiMonAn == "Có sẵn" ? "success" : bienThe.TrangThaiMonAn == "Món mới" ? "warning text-dark" : "danger")">
+                                                @bienThe.TrangThaiMonAn
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a asp-action="SuaMonAn" asp-route-id="@mon.MaMonAn"
+                                                   class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold">
+                                                    <i class="bi bi-pencil-square me-1"></i> Sửa
+                                                </a>
+                                                <form method="post" asp-action="XoaMonAn" asp-route-id="@mon.MaMonAn" style="display: inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold"
+                                                            onclick="return confirm('Bạn có chắc muốn xóa món ăn này?')">
+                                                        <i class="bi bi-trash3 me-1"></i> Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Footer -->
+            <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    Hiển thị <span id="startRange" class="fw-bold text-dark">0</span> - <span id="endRange" class="fw-bold text-dark">0</span> trên tổng số <span id="totalItems" class="fw-bold text-dark">0</span> món ăn
+                </div>
+                <nav aria-label="Dish pagination">
+                    <ul class="pagination pagination-sm m-0" id="dishPagination">
+                        <!-- Filled by JS -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var itemsPerPage = 8;
+            var currentPage = 1;
+            var $rows = $("#dishTable tbody tr.dish-row");
+
+            function showPage(page) {
+                currentPage = page;
+                var $visibleRows = $rows.filter(function() {
+                    return $(this).css('display') !== 'none';
+                });
+                var totalVisible = $visibleRows.length;
+                var totalPages = Math.ceil(totalVisible / itemsPerPage);
+                
+                if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+
+                // Hide all rows first, then show only the ones for the current page
+                $rows.hide();
+                $visibleRows.slice(start, end).show();
+
+                // Update text
+                if (totalVisible === 0) {
+                    $("#startRange").text(0);
+                    $("#endRange").text(0);
+                } else {
+                    $("#startRange").text(start + 1);
+                    $("#endRange").text(Math.min(end, totalVisible));
+                }
+                $("#totalItems").text(totalVisible);
+
+                // Render pagination buttons
+                var pagHtml = '';
+                if (totalPages > 1) {
+                    pagHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link shadow-none" href="#" data-page="${currentPage - 1}"><i class="bi bi-chevron-left"></i></a></li>`;
+                    for (var i = 1; i <= totalPages; i++) {
+                        pagHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link shadow-none" href="#" data-page="${i}">${i}</a></li>`;
+                    }
+                    pagHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link shadow-none" href="#" data-page="${currentPage + 1}"><i class="bi bi-chevron-right"></i></a></li>`;
+                }
+                $("#dishPagination").html(pagHtml);
+            }
+
+            // Page link click handler
+            $(document).on("click", "#dishPagination .page-link", function (e) {
+                e.preventDefault();
+                var page = $(this).data("page");
+                if (page) {
+                    showPage(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+
+            // Live search capability
+            $("#menuSearchInput").on("keyup", function () {
+                var value = $(this).val().toLowerCase().trim();
+                
+                $rows.each(function () {
+                    var nameText = $(this).find(".dish-name").text().toLowerCase();
+                    var categoryText = $(this).find(".dish-category").text().toLowerCase();
+                    var statusText = $(this).find(".dish-status").text().toLowerCase();
+                    
+                    var match = nameText.indexOf(value) > -1 || 
+                                categoryText.indexOf(value) > -1 || 
+                                statusText.indexOf(value) > -1;
+                                
+                    if (match) {
+                        $(this).css('display', 'table-row');
+                    } else {
+                        $(this).css('display', 'none');
+                    }
+                });
+                
+                showPage(1);
+            });
+
+            // Init page
+            showPage(1);
+        });
+    </script>
+}
+
+

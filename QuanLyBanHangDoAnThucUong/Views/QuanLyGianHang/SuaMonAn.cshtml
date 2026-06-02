@@ -1,0 +1,138 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@using QuanLyBanHangDoAnThucUong.Models.ViewModels
+@model SuaMonAnViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh Sửa Món Ăn";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4 text-warning fw-bold">
+                        ✏️ Chỉnh Sửa Món Ăn
+                    </h3>
+
+                    <form method="post" asp-action="SuaMonAn" asp-route-id="@Model.MaMonAn" enctype="multipart/form-data" novalidate>
+                        <!-- Hidden fields -->
+                        <input type="hidden" asp-for="MaMonAn" />
+                        <input type="hidden" asp-for="MaBienThe" />
+
+                        <h5 class="mb-3 border-bottom pb-2">Thông Tin Món Ăn</h5>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label asp-for="TenMon" class="form-label fw-bold"></label>
+                                    <input type="text" class="form-control" asp-for="TenMon" required>
+                                    <span asp-validation-for="TenMon" class="text-danger small"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="MaLoaiMon" class="form-label fw-bold"></label>
+                                    <select class="form-control" asp-for="MaLoaiMon" required>
+                                        <option value="">-- Chọn Loại Món --</option>
+                                        @foreach (var item in (List<TheLoaiMonAn>)ViewBag.LoaiMonAn)
+                                        {
+                                            <option value="@item.MaLoaiMon"
+                                                    selected="@(item.MaLoaiMon == Model.MaLoaiMon ? "selected" : "")">
+                                                @item.TenLoai
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="MaLoaiMon" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="mb-2">
+                                    <img id="previewImg" src="@(string.IsNullOrEmpty(Model.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{Model.HinhAnhMonAn}")" 
+                                         class="img-thumbnail" style="height: 140px; width: 140px; object-fit: cover;">
+                                </div>
+                                <label class="form-label fw-bold small">Thay đổi ảnh</label>
+                                <input type="file" name="FileHinh" class="form-control form-control-sm" id="fileInput" accept="image/*" onchange="previewFile()">
+                            </div>
+                        </div>
+
+                        <script>
+                            function previewFile() {
+                                const preview = document.getElementById('previewImg');
+                                const file = document.getElementById('fileInput').files[0];
+                                const reader = new FileReader();
+                                reader.onloadend = function () { preview.src = reader.result; }
+                                if (file) { reader.readAsDataURL(file); }
+                            }
+                        </script>
+
+                        <h5 class="mb-3 border-bottom pb-2 mt-4">Thông Tin Biến Thể</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="MoTaMonAn" class="form-label fw-bold"></label>
+                            <input type="text" class="form-control" asp-for="MoTaMonAn" required>
+                            <span asp-validation-for="MoTaMonAn" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="GiaBan" class="form-label fw-bold"></label>
+                                <input type="number" class="form-control" asp-for="GiaBan" step="1000" required>
+                                <span asp-validation-for="GiaBan" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SoLuongMon" class="form-label fw-bold"></label>
+                                <input type="number" class="form-control" asp-for="SoLuongMon" required>
+                                <span asp-validation-for="SoLuongMon" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TrangThaiMonAn" class="form-label fw-bold"></label>
+                                <select class="form-control" asp-for="TrangThaiMonAn" required>
+                                    <option value="Còn bán" selected="@(Model.TrangThaiMonAn == "Còn bán" ? "selected" : "")">Còn bán</option>
+                                    <option value="Món mới" selected="@(Model.TrangThaiMonAn == "Món mới" ? "selected" : "")">Món mới</option>
+                                    <option value="Đã hết" selected="@(Model.TrangThaiMonAn == "Đã hết" ? "selected" : "")">Đã hết</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 border-bottom pb-2 mt-4">Thông Tin Bổ Sung</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="GhiChu" class="form-label fw-bold"></label>
+                                <input type="text" class="form-control" asp-for="GhiChu" placeholder="Ghi chú thêm">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MonAnMuaThem" class="form-label fw-bold"></label>
+                                <input type="text" class="form-control" asp-for="MonAnMuaThem" placeholder="Món ăn mua thêm">
+                            </div>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+                        {
+                            <div class="alert alert-danger">
+                                <strong>❌ Lỗi:</strong>
+                                <ul class="mb-0 mt-2">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg fw-bold">
+                                💾 Lưu Thay Đổi
+                            </button>
+                            <a asp-action="QuanLyMonAn" class="btn btn-secondary">
+                                ❌ Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

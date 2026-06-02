@@ -1,0 +1,138 @@
+@model DangKyViewModel
+
+@{
+    ViewData["Title"] = "Đăng Ký Khách Hàng";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            
+            <ul class="nav nav-pills nav-justified mb-4 p-1 bg-light rounded-pill shadow-sm">
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill active fw-bold" href="/buyer/DangKy">Khách Hàng</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-pill text-muted" href="/seller/DangKy">Đối tác</a>
+                </li>
+            </ul>
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4 text-primary fw-bold">
+                        Đăng Ký Khách Hàng
+                    </h3>
+
+                    <form method="post" action="/buyer/DangKy">
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenDangNhap" class="form-label fw-bold"></label>
+                                <input class="form-control bg-light" asp-for="TenDangNhap" placeholder="Tên đăng nhập" required>
+                                <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenKH" class="form-label fw-bold"></label>
+                                <input class="form-control bg-light" asp-for="TenKH" placeholder="Họ và tên" required>
+                                <span asp-validation-for="TenKH" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-bold"></label>
+                            <input type="email" class="form-control bg-light" asp-for="Email" placeholder="Email của bạn" required>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SoDienThoai" class="form-label fw-bold"></label>
+                            <input type="tel" class="form-control bg-light" asp-for="SoDienThoai" placeholder="Số điện thoại" required>
+                            <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="GioiTinh" class="form-label fw-bold"></label>
+                                <select class="form-select bg-light" asp-for="GioiTinh" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                                <span asp-validation-for="GioiTinh" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ThanhPho" class="form-label fw-bold"></label>
+                                <select class="form-select bg-light" asp-for="ThanhPho" required>
+                                    <option value="">Chọn thành phố</option>
+                                    <option value="TP.HCM">Hồ Chí Minh</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Bình Dương">Bình Dương</option>
+                                    <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                </select>
+                                <span asp-validation-for="ThanhPho" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PhuongXa" class="form-label fw-bold"></label>
+                                <select class="form-select bg-light" asp-for="PhuongXa" required>
+                                    <option value="">Chọn Phường/Xã</option>
+                                    @if(ViewBag.PhuongXas != null)
+                                    {
+                                        foreach(var px in ViewBag.PhuongXas)
+                                        {
+                                            <option value="@px">@px</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="PhuongXa" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="DiaChi" class="form-label fw-bold"></label>
+                            <input class="form-control bg-light" asp-for="DiaChi" placeholder="Địa chỉ giao hàng mặc định" required>
+                            <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MatKhau" class="form-label fw-bold"></label>
+                            <input type="password" class="form-control bg-light" asp-for="MatKhau" placeholder="Mật khẩu" required>
+                            <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="XacNhanMatKhau" class="form-label fw-bold"></label>
+                            <input type="password" class="form-control bg-light" asp-for="XacNhanMatKhau" placeholder="Xác nhận mật khẩu" required>
+                            <span asp-validation-for="XacNhanMatKhau" class="text-danger small"></span>
+                        </div>
+
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
+                        {
+                            <div class="alert alert-danger py-2 rounded-3">
+                                <ul class="mb-0 small ps-3">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3 fw-bold rounded-pill border-0 shadow-sm">
+                            Đăng Ký
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-2">
+                        <p class="mb-0 text-muted">
+                            Đã có tài khoản?
+                            <a href="/buyer/DangNhap" class="fw-bold text-decoration-none text-primary">Đăng nhập tại đây</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

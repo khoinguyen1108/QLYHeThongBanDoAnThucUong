@@ -1,0 +1,246 @@
+﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@model List<DonHang>
+
+@{
+    ViewData["Title"] = "Quản Lý Đơn Hàng";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold m-0"><i class="bi bi-cart-check text-primary me-2"></i>Quản Lý Đơn Hàng</h2>
+            <div class="badge bg-primary fs-5 px-4 py-2 shadow-sm rounded-pill">
+                Tổng: @ViewBag.TotalCount đơn hàng
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="card shadow border-0 rounded-4 mb-4 bg-white">
+            <div class="card-body p-3">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" id="orderSearchInput" class="form-control bg-light border-start-0 border-light" placeholder="Tìm kiếm mã đơn, khách hàng, gian hàng...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-funnel"></i></span>
+                            <select id="statusFilter" class="form-select bg-light border-start-0 border-light">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                <option value="Đang chuẩn bị">Đang chuẩn bị</option>
+                                <option value="Đang giao">Đang giao</option>
+                                <option value="Hoàn thành">Hoàn thành</option>
+                                <option value="Đã hủy">Đã hủy</option>
+                                <option value="Từ chối">Từ chối</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button id="btnResetFilters" class="btn btn-outline-secondary rounded-pill px-3 fw-bold"><i class="bi bi-arrow-counterclockwise me-1"></i>Đặt lại</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0" id="ordersTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center py-3 sortable" style="cursor: pointer;">Mã ĐH <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="py-3 sortable" style="cursor: pointer;">Ngày Tạo <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="py-3 sortable" style="cursor: pointer;">Khách Hàng <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="py-3 sortable" style="cursor: pointer;">Gian Hàng <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="text-end py-3 sortable" style="cursor: pointer;">Thành Tiền <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="text-center py-3 sortable" style="cursor: pointer;">Trạng Thái <i class="bi bi-arrow-down-up small ms-1 opacity-50"></i></th>
+                                <th class="text-center py-3">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Không có đơn hàng nào</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var donHang in Model)
+                                {
+                                    <tr>
+                                        <td class="text-center fw-bold">#@donHang.MaDonHang</td>
+                                        <td>@donHang.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (donHang.KhachHang != null)
+                                            {
+                                                <span class="fw-bold">@donHang.KhachHang.TenKH</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">Khách vãng lai</span>
+                                            }
+                                        </td>
+                                        <td><span class="badge bg-secondary">@donHang.GianHang?.TenGianHang</span></td>
+                                        <td class="text-end fw-bold text-danger">@donHang.ThanhTienKhachTra.ToString("#,##0") đ</td>
+                                        <td class="text-center">
+                                            @{
+                                                string badgeClass = donHang.TrangThaiDonHang switch
+                                                {
+                                                    "Hoàn thành" => "success",
+                                                    "Đang giao" => "info",
+                                                    "Đang chuẩn bị" => "warning",
+                                                    "Chờ xác nhận" => "secondary",
+                                                    "Đã hủy" => "danger",
+                                                    "Từ chối" => "dark",
+                                                    _ => "primary"
+                                                };
+                                            }
+                                            <span class="badge bg-@badgeClass py-2 px-3 rounded-pill">@donHang.TrangThaiDonHang</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a asp-action="ChiTietDonHang" asp-route-id="@donHang.MaDonHang" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Xem</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages != null && ViewBag.TotalPages > 1)
+            {
+                <div class="card-footer bg-white py-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <li class="page-item"><a class="page-link" asp-action="QuanLyDonHang" asp-route-page="1">Đầu</a></li>
+                                <li class="page-item"><a class="page-link" asp-action="QuanLyDonHang" asp-route-page="@(ViewBag.CurrentPage - 1)">Trước</a></li>
+                            }
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="QuanLyDonHang" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <li class="page-item"><a class="page-link" asp-action="QuanLyDonHang" asp-route-page="@(ViewBag.CurrentPage + 1)">Sau</a></li>
+                                <li class="page-item"><a class="page-link" asp-action="QuanLyDonHang" asp-route-page="@ViewBag.TotalPages">Cuối</a></li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        overflow-x: hidden;
+    }
+    .sortable:hover {
+        background-color: rgba(255,255,255,0.15) !important;
+    }
+    .sortable.asc i::before {
+        content: "\f124";
+        font-family: "bootstrap-icons";
+        opacity: 1 !important;
+    }
+    .sortable.desc i::before {
+        content: "\f121";
+        font-family: "bootstrap-icons";
+        opacity: 1 !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Live Search & Status Filter combined
+            function filterTable() {
+                var searchVal = $('#orderSearchInput').val().toLowerCase().trim();
+                var statusVal = $('#statusFilter').val().toLowerCase().trim();
+                
+                $('#ordersTable tbody tr').each(function() {
+                    var row = $(this);
+                    if (row.find('td').length > 1) {
+                        var text = row.text().toLowerCase();
+                        var statusText = row.find('td:nth-child(6)').text().toLowerCase().trim();
+                        
+                        var matchesSearch = text.indexOf(searchVal) > -1;
+                        var matchesStatus = statusVal === "" || statusText === statusVal;
+                        
+                        if (matchesSearch && matchesStatus) {
+                            row.show();
+                        } else {
+                            row.hide();
+                        }
+                    }
+                });
+            }
+
+            $('#orderSearchInput').on('keyup', filterTable);
+            $('#statusFilter').on('change', filterTable);
+
+            // Reset filters
+            $('#btnResetFilters').click(function() {
+                $('#orderSearchInput').val('');
+                $('#statusFilter').val('');
+                $('#ordersTable tbody tr').show();
+            });
+
+            // Client-side Sorting
+            $('.sortable').click(function() {
+                var th = $(this);
+                var table = th.closest('table');
+                var tbody = table.find('tbody');
+                var rows = tbody.find('tr').toArray();
+                var index = th.index();
+                var ascending = !th.hasClass('asc');
+
+                table.find('th').removeClass('asc desc');
+                th.toggleClass('asc', ascending).toggleClass('desc', !ascending);
+
+                rows.sort(function(a, b) {
+                    var cellA = $(a).children('td').eq(index).text().trim();
+                    var cellB = $(b).children('td').eq(index).text().trim();
+
+                    // Handle currency/numbers
+                    var cleanA = cellA.replace(/[^\d]/g, '');
+                    var cleanB = cellB.replace(/[^\d]/g, '');
+                    if (!isNaN(cleanA) && !isNaN(cleanB) && cleanA !== "" && cleanB !== "") {
+                        return ascending ? parseFloat(cleanA) - parseFloat(cleanB) : parseFloat(cleanB) - parseFloat(cleanA);
+                    }
+
+                    // Handle dates (e.g. dd/MM/yyyy HH:mm)
+                    var dateRegex = /(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/;
+                    if (dateRegex.test(cellA) && dateRegex.test(cellB)) {
+                        var partsA = cellA.match(dateRegex);
+                        var partsB = cellB.match(dateRegex);
+                        var dateA = new Date(partsA[3], partsA[2]-1, partsA[1], partsA[4], partsA[5]);
+                        var dateB = new Date(partsB[3], partsB[2]-1, partsB[1], partsB[4], partsB[5]);
+                        return ascending ? dateA - dateB : dateB - dateA;
+                    }
+
+                    return ascending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+                });
+
+                $.each(rows, function(index, row) {
+                    tbody.append(row);
+                });
+            });
+        });
+    </script>
+}
+
+

@@ -1,0 +1,196 @@
+﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.GioHang
+@{
+    ViewData["Title"] = "Giỏ Hàng Của Bạn";
+    var gianHang = Model?.CT_GioHangs.FirstOrDefault()?.BienTheMonAn?.MonAn?.GianHang;
+}
+
+<div class="container py-5 min-vh-100">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h2 class="fw-bold mb-4"><i class="bi bi-cart3"></i> Giỏ Hàng</h2>
+
+            @if (Model == null || !Model.CT_GioHangs.Any())
+            {
+                <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                    <img src="https://cdn-icons-png.flaticon.com/512/11329/11329060.png" alt="Giỏ hàng trống" style="width: 150px; opacity: 0.5;" class="mb-3">
+                    <h5 class="text-muted">Giỏ hàng của bạn đang trống</h5>
+                    <p class="text-muted small mb-4">Hãy chọn thêm món ăn thơm ngon nhé!</p>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary px-4 fw-bold text-white rounded-pill">Quay lại mua sắm</a>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label fw-bold" for="selectAll">Chọn tất cả</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger border-0" id="removeSelected" style="display:none;"><i class="bi bi-trash"></i> Xóa mục đã chọn</button>
+                </div>
+
+                var groupedItems = Model.CT_GioHangs.GroupBy(ct => ct.BienTheMonAn?.MonAn?.GianHang).ToList();
+                
+                @foreach (var group in groupedItems)
+                {
+                    var store = group.Key;
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold m-0"><i class="bi bi-shop text-success me-2"></i>@(store?.TenGianHang ?? "Quán ăn")</h5>
+                            <span class="badge bg-light text-muted fw-normal">@group.Count() món</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                @foreach (var item in group)
+                                {
+                                    var hinhAnh = string.IsNullOrEmpty(item.BienTheMonAn?.HinhAnhMonAn) ? "/images/default_food.jpg" : $"/images/monan/{item.BienTheMonAn.HinhAnhMonAn}";
+                                    
+                                    <li class="list-group-item p-4" id="cart-item-@item.MaCTGioHang">
+                                        <div class="row align-items-center">
+                                            <div class="col-1 text-center">
+                                                <input class="form-check-input item-checkbox" type="checkbox" value="@item.MaCTGioHang" data-price="@item.UocTinhThanhTien">
+                                            </div>
+                                            <div class="col-3 col-md-2">
+                                                <img src="@hinhAnh" class="img-fluid rounded-3 object-fit-cover" style="width: 80px; height: 80px;" alt="@item.BienTheMonAn?.MonAn?.TenMon">
+                                            </div>
+                                            <div class="col-8 col-md-4">
+                                                <h6 class="fw-bold mb-1">@(item.BienTheMonAn?.MonAn?.TenMon)</h6>
+                                                <p class="text-muted small mb-0">@item.BienTheMonAn?.MoTaMonAn</p>
+                                                <div class="fw-bold text-primary mt-1">@String.Format("{0:0,0}đ", item.GiaBan)</div>
+                                            </div>
+                                            <div class="col-6 col-md-3 mt-3 mt-md-0">
+                                                <div class="input-group input-group-sm w-75 mx-auto mx-md-0">
+                                                    <button class="btn btn-outline-secondary btn-qty" data-id="@item.MaCTGioHang" data-change="-1" type="button"><i class="bi bi-dash"></i></button>
+                                                    <input type="text" class="form-control text-center bg-white" value="@item.SoLuong" readonly>
+                                                    <button class="btn btn-outline-secondary btn-qty" data-id="@item.MaCTGioHang" data-change="1" type="button"><i class="bi bi-plus"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-2 text-end mt-3 mt-md-0">
+                                                <p class="fw-bold text-dark mb-1 d-block d-md-none">Thành tiền:</p>
+                                                <span class="fw-bold text-danger">@String.Format("{0:0,0}đ", item.UocTinhThanhTien)</span>
+                                                <br>
+                                                <button class="btn btn-sm btn-link text-danger mt-1 p-0 btn-remove" data-id="@item.MaCTGioHang"><i class="bi bi-trash"></i> Xóa</button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mt-4 sticky-bottom" style="bottom: 20px; z-index: 100;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="fs-5 text-muted">Tổng cộng (<span id="selectedCount">0</span> món):</span>
+                            <div class="small text-muted">Chỉ tính những món đã tick chọn</div>
+                        </div>
+                        <span class="fs-3 fw-bold text-danger" id="selectedTotal">0đ</span>
+                    </div>
+                    <form id="checkoutForm" action="@Url.Action("Checkout", "Cart")" method="get">
+                        <input type="hidden" name="selectedItems" id="selectedItemsInput">
+                        <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-white shadow-sm fs-5" id="btnCheckout" disabled>
+                            Tiến Hành Thanh Toán
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            function updateSummary() {
+                var total = 0;
+                var count = 0;
+                var ids = [];
+                
+                $('.item-checkbox:checked').each(function() {
+                    total += parseFloat($(this).data('price'));
+                    count++;
+                    ids.push($(this).val());
+                });
+
+                $('#selectedTotal').text(total.toLocaleString('vi-VN') + 'đ');
+                $('#selectedCount').text(count);
+                $('#selectedItemsInput').val(ids.join(','));
+                
+                if(count > 0) {
+                    $('#btnCheckout').prop('disabled', false);
+                    $('#removeSelected').show();
+                } else {
+                    $('#btnCheckout').prop('disabled', true);
+                    $('#removeSelected').hide();
+                }
+                
+                // Cập nhật trạng thái selectAll
+                $('#selectAll').prop('checked', $('.item-checkbox:checked').length === $('.item-checkbox').length);
+            }
+
+            $('.item-checkbox').change(updateSummary);
+
+            $('#selectAll').change(function() {
+                $('.item-checkbox').prop('checked', this.checked);
+                updateSummary();
+            });
+
+            // Chạy cập nhật tổng tiền ban đầu khi load trang (đặc biệt khi back về)
+            updateSummary();
+
+            // Update Quantity
+            $('.btn-qty').click(function() {
+                var id = $(this).data('id');
+                var change = $(this).data('change');
+
+                $.ajax({
+                    url: '/Cart/UpdateQuantity',
+                    type: 'POST',
+                    data: { maCTGioHang: id, change: change },
+                    success: function(res) {
+                        if(res.success) {
+                            location.reload();
+                        }
+                    }
+                });
+            });
+
+            // Remove Item
+            $('.btn-remove').click(function() {
+                var id = $(this).data('id');
+                confirmRemove([id]);
+            });
+
+            $('#removeSelected').click(function() {
+                var ids = [];
+                $('.item-checkbox:checked').each(function() {
+                    ids.push($(this).val());
+                });
+                if(ids.length > 0) confirmRemove(ids);
+            });
+
+            function confirmRemove(ids) {
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    text: ids.length > 1 ? `Bạn có chắc chắn muốn xóa ${ids.length} món đã chọn?` : "Bạn có chắc chắn muốn xóa khỏi giỏ hàng không?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Gọi xóa (có thể viết lại API để nhận List<int> hoặc lặp lại gọi)
+                        var calls = ids.map(id => $.ajax({ url: '/Cart/RemoveItem', type: 'POST', data: { maCTGioHang: id } }));
+                        $.when.apply($, calls).then(function() {
+                            location.reload();
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+}
+

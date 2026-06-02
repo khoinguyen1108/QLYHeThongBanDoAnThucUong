@@ -1,0 +1,96 @@
+﻿@inject QuanLyBanHangDoAnThucUong.Data.ApplicationDbContext _context
+@{
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+    var maTaiKhoan = Context.Session.GetInt32("MaTaiKhoan");
+    string partnerName = "🏪 ĐỐI TÁC GIAN HÀNG";
+    if (maTaiKhoan.HasValue)
+    {
+        var doiTac = _context.DoiTacs.FirstOrDefault(d => d.MaTaiKhoan == maTaiKhoan.Value);
+        if (doiTac != null && !string.IsNullOrEmpty(doiTac.TenQuanDoiTac))
+        {
+            partnerName = "🏪 " + doiTac.TenQuanDoiTac;
+        }
+    }
+}
+
+<aside class="sidebar bg-dark text-white shadow-lg" style="height: calc(100vh - 60px); position: fixed; left: 0; top: 60px; width: 250px; overflow-y: auto; z-index: 999; padding-bottom: 30px;">
+    <nav class="navbar-nav flex-column p-3"  >
+        <h5 class="mb-4 text-success fw-bold text-truncate" title="@partnerName">@partnerName</h5>
+
+        <a asp-controller="QuanLyGianHang" asp-action="Index"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "Index" ? "active" : "")"
+           style="@(currentAction == "Index" ? "background-color: #198754; font-weight: bold;" : "")">
+            📊 Tổng Quan
+        </a>
+
+        
+
+
+        <a asp-controller="QuanLyGianHang" asp-action="QuanLyMonAn"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyMonAn" || currentAction == "ThemMonAn" || currentAction == "SuaMonAn" ? "active" : "")"
+           style="@(currentAction == "QuanLyMonAn" || currentAction == "ThemMonAn" || currentAction == "SuaMonAn" ? "background-color: #198754; font-weight: bold;" : "")">
+            🍜 Quản Lý Món Ăn
+        </a>
+
+        <a asp-controller="QuanLyGianHang" asp-action="QuanLyDonHang"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyDonHang" ? "active" : "")"
+           style="@(currentAction == "QuanLyDonHang" ? "background-color: #198754; font-weight: bold;" : "")">
+            🧾 Quản Lý Đơn Hàng
+            @if (ViewBag.PendingOrdersCount != null && (int)ViewBag.PendingOrdersCount > 0)
+            {
+                <span class="badge bg-danger rounded-pill float-end">@ViewBag.PendingOrdersCount</span>
+            }
+        </a>
+
+        <a asp-controller="QuanLyGianHang" asp-action="DoanhThu"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "DoanhThu" ? "active" : "")"
+           style="@(currentAction == "DoanhThu" ? "background-color: #198754; font-weight: bold;" : "")">
+            💰 Doanh Thu
+        </a>
+
+        <a asp-controller="QuanLyGianHang" asp-action="ChuongTrinhKhuyenMai"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "ChuongTrinhKhuyenMai" ? "active" : "")"
+           style="@(currentAction == "ChuongTrinhKhuyenMai" ? "background-color: #198754; font-weight: bold;" : "")">
+            🎁 Khuyến Mãi
+        </a>
+
+                <a asp-controller="QuanLyGianHang" asp-action="QuanLyDanhGia"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyDanhGia" ? "active" : "")"
+           style="@(currentAction == "QuanLyDanhGia" ? "background-color: #198754; font-weight: bold;" : "")">
+            💬 Quản Lý Đánh Giá
+        </a>
+
+        <hr class="bg-white" />
+
+        <a asp-controller="Account" asp-action="DangXuat" class="nav-link text-danger mb-2 rounded px-3 py-2">
+            🚪 Đăng Xuất
+        </a>
+    </nav>
+</aside>
+
+<style>
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.5);
+    }
+
+    .nav-link:hover:not(.active) {
+        background-color: rgba(255,255,255,0.1) !important;
+    }
+</style>
+
+
+
+

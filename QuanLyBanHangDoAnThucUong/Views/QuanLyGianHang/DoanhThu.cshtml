@@ -1,0 +1,294 @@
+﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
+
+@{
+    ViewData["Title"] = "Thống Kê Doanh Thu";
+    decimal dailyGrowth = ViewBag.YesterdayRevenue != null && ViewBag.YesterdayRevenue > 0 
+        ? ((ViewBag.DailyRevenue - ViewBag.YesterdayRevenue) / ViewBag.YesterdayRevenue) * 100 
+        : (ViewBag.DailyRevenue > 0 ? 100 : 0);
+        
+    decimal monthlyGrowth = ViewBag.LastMonthRevenue != null && ViewBag.LastMonthRevenue > 0 
+        ? ((ViewBag.MonthlyRevenue - ViewBag.LastMonthRevenue) / ViewBag.LastMonthRevenue) * 100 
+        : (ViewBag.MonthlyRevenue > 0 ? 100 : 0);
+
+    decimal yearlyGrowth = ViewBag.LastYearRevenue != null && ViewBag.LastYearRevenue > 0 
+        ? ((ViewBag.YearlyRevenue - ViewBag.LastYearRevenue) / ViewBag.LastYearRevenue) * 100 
+        : (ViewBag.YearlyRevenue > 0 ? 100 : 0);
+
+    var danhSachChiNhanh = ViewBag.DanhSachChiNhanh as List<QuanLyBanHangDoAnThucUong.Models.Entities.GianHang>;
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <!-- Main Content Header -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #198754 0%, #12b886 100%);">
+            <div class="card-body p-4 text-white">
+                <h3 class="fw-bold mb-1"><i class="bi bi-wallet2 me-2"></i>Báo Cáo Doanh Thu & Đơn Hàng</h3>
+                <p class="mb-0" style="color: rgba(255,255,255,0.9);">Theo dõi doanh thu, hiệu quả bán hàng và tình trạng đơn hàng của gian hàng.</p>
+            </div>
+        </div>
+
+        <!-- Bộ Lọc -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <form method="get" action="/QuanLyGianHang/DoanhThu" class="row g-3 align-items-end">
+                    
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-muted">TỪ NGÀY</label>
+                        <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control border-0 bg-light" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-muted">ĐẾN NGÀY</label>
+                        <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control border-0 bg-light" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-muted">TRẠNG THÁI ĐƠN</label>
+                        <select name="status" class="form-select border-0 bg-light">
+                            <option value="">Tất cả trạng thái</option>
+                            <!option value="Hoàn thành" @(ViewBag.Status == "Hoàn thành" ? "selected" : "")>Hoàn thành</!option>
+                            <!option value="Đã giao" @(ViewBag.Status == "Đã giao" ? "selected" : "")>Đã giao</!option>
+                            <!option value="Chờ xác nhận" @(ViewBag.Status == "Chờ xác nhận" ? "selected" : "")>Chờ xác nhận</!option>
+                            <!option value="Đang chuẩn bị" @(ViewBag.Status == "Đang chuẩn bị" ? "selected" : "")>Đang chuẩn bị</!option>
+                            <!option value="Đang giao" @(ViewBag.Status == "Đang giao" ? "selected" : "")>Đang giao</!option>
+                            <!option value="Đã hủy" @(ViewBag.Status == "Đã hủy" ? "selected" : "")>Đã hủy</!option>
+                            <!option value="Từ chối" @(ViewBag.Status == "Từ chối" ? "selected" : "")>Từ chối</!option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold small text-muted">SẮP XẾP</label>
+                        <select name="sortOrder" class="form-select border-0 bg-light">
+                            <option value="">Mới nhất</option>
+                            <option value="desc" selected="@(ViewBag.SortOrder == "desc")">Doanh thu cao - thấp</option>
+                            <option value="asc" selected="@(ViewBag.SortOrder == "asc")">Doanh thu thấp - cao</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold w-100"><i class="bi bi-funnel me-1"></i> Lọc</button>
+                        <a href="/QuanLyGianHang/DoanhThu" class="btn btn-light px-3" title="Đặt lại bộ lọc"><i class="bi bi-arrow-clockwise"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <a href="/QuanLyGianHang/QuanLyDonHang" class="text-decoration-none d-block h-100">
+                <div class="card border-0 shadow-sm rounded-4 h-100 hover-card" style="background-color: rgba(111, 66, 193, 0.1);">
+                    <div class="card-body p-3 text-center">
+                        <h3 class="fw-bold mb-1" style="color: #6f42c1;">@ViewBag.TotalOrdersCount</h3>
+                        <div class="small fw-bold opacity-75" style="color: #6f42c1;">TỔNG ĐƠN ĐÃ ĐẶT</div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <a href="/QuanLyGianHang/QuanLyDonHang" class="text-decoration-none d-block h-100">
+                <div class="card border-0 shadow-sm rounded-4 h-100 hover-card bg-warning bg-opacity-10">
+                    <div class="card-body p-3 text-center">
+                        <h3 class="fw-bold text-warning mb-1">@ViewBag.PendingOrdersCount</h3>
+                        <div class="text-warning small fw-bold opacity-75" style="filter: brightness(0.7);">ĐANG XỬ LÝ</div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <a href="/QuanLyGianHang/QuanLyDonHang" class="text-decoration-none d-block h-100">
+                <div class="card border-0 shadow-sm rounded-4 h-100 hover-card bg-info bg-opacity-10">
+                    <div class="card-body p-3 text-center">
+                        <h3 class="fw-bold text-info mb-1">@ViewBag.DeliveryOrdersCount</h3>
+                        <div class="text-info small fw-bold opacity-75" style="filter: brightness(0.7);">ĐANG GIAO</div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <a href="/QuanLyGianHang/QuanLyDonHang" class="text-decoration-none d-block h-100">
+                <div class="card border-0 shadow-sm rounded-4 h-100 hover-card bg-danger bg-opacity-10">
+                    <div class="card-body p-3 text-center">
+                        <h3 class="fw-bold text-danger mb-1">@ViewBag.CanceledOrdersCount</h3>
+                        <div class="text-danger small fw-bold opacity-75">ĐÃ HỦY / TỪ CHỐI</div>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <!-- Thống kê doanh thu -->
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 p-3 rounded-3">
+                                <i class="bi bi-calendar-day fs-4 text-success"></i>
+                            </div>
+                            <span class="badge bg-success rounded-pill px-3 py-2">Hôm nay</span>
+                        </div>
+                        <h2 class="fw-bold mb-1 text-success">@String.Format("{0:N0}đ", ViewBag.DailyRevenue)</h2>
+                        <p class="text-muted mb-2 small fw-bold">DOANH THU NGÀY</p>
+                        
+                        <div class="d-flex align-items-center mt-3 pt-3 border-top">
+                            @if (dailyGrowth >= 0)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="bi bi-arrow-up-right me-1"></i>+@dailyGrowth.ToString("0.0")%</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="bi bi-arrow-down-right me-1"></i>@dailyGrowth.ToString("0.0")%</span>
+                            }
+                            <span class="small text-muted">so với hôm qua (@String.Format("{0:N0}đ", ViewBag.YesterdayRevenue))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="bg-info bg-opacity-10 p-3 rounded-3">
+                                <i class="bi bi-calendar-month fs-4 text-info"></i>
+                            </div>
+                            <span class="badge bg-info rounded-pill px-3 py-2">Tháng này</span>
+                        </div>
+                        <h2 class="fw-bold mb-1 text-info">@String.Format("{0:N0}đ", ViewBag.MonthlyRevenue)</h2>
+                        <p class="text-muted mb-2 small fw-bold">DOANH THU THÁNG</p>
+                        
+                        <div class="d-flex align-items-center mt-3 pt-3 border-top">
+                            @if (monthlyGrowth >= 0)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="bi bi-arrow-up-right me-1"></i>+@monthlyGrowth.ToString("0.0")%</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="bi bi-arrow-down-right me-1"></i>@monthlyGrowth.ToString("0.0")%</span>
+                            }
+                            <span class="small text-muted">so với tháng trước (@String.Format("{0:N0}đ", ViewBag.LastMonthRevenue))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+                                <i class="bi bi-calendar fs-4 text-primary"></i>
+                            </div>
+                            <span class="badge bg-primary rounded-pill px-3 py-2">Năm nay</span>
+                        </div>
+                        <h2 class="fw-bold mb-1 text-primary">@String.Format("{0:N0}đ", ViewBag.YearlyRevenue)</h2>
+                        <p class="text-muted mb-2 small fw-bold">DOANH THU NĂM</p>
+                        
+                        <div class="d-flex align-items-center mt-3 pt-3 border-top">
+                            @if (yearlyGrowth >= 0)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="bi bi-arrow-up-right me-1"></i>+@yearlyGrowth.ToString("0.0")%</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="bi bi-arrow-down-right me-1"></i>@yearlyGrowth.ToString("0.0")%</span>
+                            }
+                            <span class="small text-muted">so với năm trước (@String.Format("{0:N0}đ", ViewBag.LastYearRevenue))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-3">
+                                <i class="bi bi-piggy-bank fs-4 text-warning"></i>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Tất cả</span>
+                        </div>
+                        <h2 class="fw-bold mb-1 text-warning">@String.Format("{0:N0}đ", ViewBag.TotalRevenue)</h2>
+                        <p class="text-muted mb-0 small fw-bold">TỔNG DOANH THU TRỌN ĐỜI</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <!-- Recent Completed Sales -->
+            <div class="col-md-12 mb-3">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold m-0 text-dark"><i class="bi bi-clock-history text-muted me-2"></i>Các đơn hàng gần đây</h5>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Số lượng: @ViewBag.RecentOrdersCount</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Mã Đơn</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Ngày Hoàn Thành</th>
+                                        <th class="text-end">Doanh Thu</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-center pe-4" style="width: 100px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.RecentOrders == null || !((List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>)ViewBag.RecentOrders).Any())
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                Không có đơn hàng nào.
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var item in (List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>)ViewBag.RecentOrders)
+                                        {
+                                            <tr>
+                                                <td class="ps-4 fw-bold">#@item.MaDonHang</td>
+                                                <td>
+                                                    <div class="fw-medium">@item.KhachHang?.TenKH</div>
+                                                    <div class="small text-muted">@item.KhachHang?.SoDTKH</div>
+                                                </td>
+                                                <td>@item.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td class="text-end fw-bold text-success">+@String.Format("{0:N0}đ", item.ThanhTienKhachTra)</td>
+                                                <td class="text-center">
+                                                    @if(item.TrangThaiDonHang == "Hoàn thành" || item.TrangThaiDonHang == "Đã giao") {
+                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">@item.TrangThaiDonHang</span>
+                                                    } else if (item.TrangThaiDonHang == "Đã hủy" || item.TrangThaiDonHang == "Từ chối") {
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">@item.TrangThaiDonHang</span>
+                                                    } else {
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill text-dark">@item.TrangThaiDonHang</span>
+                                                    }
+                                                </td>
+                                                <td class="text-center pe-4">
+                                                    <a href="/QuanLyGianHang/QuanLyDonHang" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                        <i class="bi bi-eye"></i> Chi tiết
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
+    }
+</style>
+

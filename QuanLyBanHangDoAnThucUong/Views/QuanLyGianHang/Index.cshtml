@@ -1,0 +1,301 @@
+@model GianHang
+
+@{
+    ViewData["Title"] = "Quản Lý Gian Hàng";
+}
+
+<div style="margin-left: 250px; margin-top: 20px;">
+    <div class="container-fluid">
+        <!-- Main Content -->
+        <div>
+            <!-- Welcome -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #007bff 0%, #00c6ff 100%);">
+                <div class="card-body p-4 text-white">
+                    <h3 class="fw-bold mb-1"><i class="bi bi-shop me-2"></i>Chào mừng đối tác, @Model.DoiTac?.TenQuanDoiTac!</h3>
+                    <p class="mb-0" style="color: rgba(255,255,255,0.9);">Quản lý gian hàng và thực đơn của bạn một cách dễ dàng.</p>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100 position-relative overflow-hidden">
+                        <div class="card-body p-4 position-relative z-1">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="p-3 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);">
+                                    <i class="bi bi-clock-history fs-4 text-white"></i>
+                                </div>
+                                <span class="badge bg-danger rounded-pill px-3 py-2">Chờ xử lý</span>
+                            </div>
+                            <h2 class="fw-bold mb-1 text-dark display-6">@ViewBag.PendingOrdersCount</h2>
+                            <p class="text-muted mb-0 small fw-bold text-uppercase tracking-wide">Đơn hàng cần xác nhận</p>
+                        </div>
+                        <!-- Decorative circle -->
+                        <div class="position-absolute top-0 end-0 opacity-10 translate-middle-y me-n4 mt-2" style="width: 100px; height: 100px; border-radius: 50%; background: #FF9A9E;"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100 position-relative overflow-hidden">
+                        <div class="card-body p-4 position-relative z-1">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="p-3 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);">
+                                    <i class="bi bi-wallet2 fs-4 text-white"></i>
+                                </div>
+                                <span class="badge bg-primary rounded-pill px-3 py-2">Hôm nay</span>
+                            </div>
+                            <h2 class="fw-bold mb-1 text-dark display-6">@(((decimal)(ViewBag.DailyRevenue ?? 0)).ToString("N0"))đ</h2>
+                            <p class="text-muted mb-0 small fw-bold text-uppercase tracking-wide">Doanh thu ngày</p>
+                        </div>
+                        <div class="position-absolute top-0 end-0 opacity-10 translate-middle-y me-n4 mt-2" style="width: 100px; height: 100px; border-radius: 50%; background: #a18cd1;"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100 position-relative overflow-hidden">
+                        <div class="card-body p-4 position-relative z-1">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="p-3 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+                                    <i class="bi bi-cash-stack fs-4 text-white"></i>
+                                </div>
+                                <span class="badge bg-success rounded-pill px-3 py-2">Tháng @DateTime.Now.Month</span>
+                            </div>
+                            <h2 class="fw-bold mb-1 text-dark display-6">@(((decimal)(ViewBag.MonthlyRevenue ?? 0)).ToString("N0"))đ</h2>
+                            <p class="text-muted mb-0 small fw-bold text-uppercase tracking-wide">Doanh thu tháng</p>
+                        </div>
+                        <div class="position-absolute top-0 end-0 opacity-10 translate-middle-y me-n4 mt-2" style="width: 100px; height: 100px; border-radius: 50%; background: #84fab0;"></div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100 position-relative overflow-hidden">
+                        <div class="card-body p-4 position-relative z-1">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="p-3 rounded-circle shadow-sm" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);">
+                                    <i class="bi bi-calendar fs-4 text-white"></i>
+                                </div>
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Năm @DateTime.Now.Year</span>
+                            </div>
+                            <h2 class="fw-bold mb-1 text-dark display-6">@(((decimal)(ViewBag.YearlyRevenue ?? 0)).ToString("N0"))đ</h2>
+                            <p class="text-muted mb-0 small fw-bold text-uppercase tracking-wide">Doanh thu năm</p>
+                        </div>
+                        <div class="position-absolute top-0 end-0 opacity-10 translate-middle-y me-n4 mt-2" style="width: 100px; height: 100px; border-radius: 50%; background: #f6d365;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row Chart -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Biểu Đồ Doanh Thu</h5>
+                                <div>
+                                    <select class="form-select form-select-sm rounded-pill fw-bold" id="chartPeriodSelect" style="width: 150px; background-color: #f8f9fa;">
+                                        <option value="7days" selected>7 ngày qua</option>
+                                        <option value="30days">30 ngày qua</option>
+                                        <option value="month">Tháng này</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="height: 350px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- Thông tin cá nhân đối tác -->
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-3"><i class="bi bi-person-badge text-primary me-2"></i>Thông tin cá nhân</h5>
+                            <div class="mb-2"><strong>Người đại diện:</strong> @Model.DoiTac?.TenQuanDoiTac</div>
+                            <div class="mb-2"><strong>Số điện thoại:</strong> @Model.DoiTac?.SoDTDoiTac</div>
+                            <div class="mb-3"><strong>Địa chỉ:</strong> @Model.DoiTac?.DiaChiDoiTac</div>
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalEditDoiTac">
+                                <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông tin gian hàng -->
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold mb-3"><i class="bi bi-info-circle text-info me-2"></i>Gian hàng</h5>
+                            <div class="mb-2"><strong>Địa chỉ:</strong> @Model.DiaChiCuThe</div>
+                            <div class="mb-2"><strong>Giờ mở cửa:</strong> @Model.GioMo.ToString(@"hh\:mm") - @Model.GioDong.ToString(@"hh\:mm")</div>
+                            <div class="mb-2"><strong>Điều lệ:</strong> @Model.DieuLe?.TenDieuLe (@Model.DieuLe?.PhiChietKhau%)</div>
+                            <div class="mb-0"><strong>Trạng thái:</strong> <span class="badge bg-success">@Model.TrangThaiGianHang</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chỉnh sửa thông tin đối tác -->
+<div class="modal fade" id="modalEditDoiTac" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <form asp-action="CapNhatThongTinDoiTac" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-bottom-0 p-4">
+                    <h5 class="modal-title fw-bold">Chỉnh sửa thông tin cá nhân</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên người đại diện / Quán</label>
+                        <input type="text" name="tenQuan" class="form-control" value="@Model.DoiTac?.TenQuanDoiTac" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số điện thoại</label>
+                        <input type="text" name="soDT" class="form-control" value="@Model.DoiTac?.SoDTDoiTac" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Thành Phố</label>
+                            <select name="thanhPho" class="form-select" required>
+                                <option value="">Chọn thành phố...</option>
+                                <option value="TP.HCM" selected="@(Model.ThanhPho == "TP.HCM")">Hồ Chí Minh</option>
+                                <option value="Hà Nội" selected="@(Model.ThanhPho == "Hà Nội")">Hà Nội</option>
+                                <option value="Bình Dương" selected="@(Model.ThanhPho == "Bình Dương")">Bình Dương</option>
+                                <option value="Bà Rịa - Vũng Tàu" selected="@(Model.ThanhPho == "Bà Rịa - Vũng Tàu")">Bà Rịa - Vũng Tàu</option>
+                                <option value="Đà Nẵng" selected="@(Model.ThanhPho == "Đà Nẵng")">Đà Nẵng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Phường / Xã</label>
+                            <select name="phuongXa" class="form-select" required>
+                                <option value="">Chọn Phường/Xã...</option>
+                                @if (ViewBag.PhuongXas != null)
+                                {
+                                    foreach (var px in ViewBag.PhuongXas)
+                                    {
+                                        <option value="@px" selected="@(Model.PhuongXa == px)">@px</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Địa chỉ</label>
+                        <textarea name="diaChi" class="form-control" rows="3" required>@Model.DoiTac?.DiaChiDoiTac</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 p-4 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let revenueChart = null;
+
+        function initChart(labels, data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+            gradient.addColorStop(0, 'rgba(13, 110, 253, 0.4)');
+            gradient.addColorStop(1, 'rgba(13, 110, 253, 0.05)');
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: data,
+                        borderColor: '#0d6efd',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#0d6efd',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
+                            ticks: {
+                                callback: function(value) {
+                                    if(value >= 1000000) return (value / 1000000).toFixed(1) + ' Tr';
+                                    if(value >= 1000) return (value / 1000).toFixed(0) + ' k';
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+
+        function loadChartData(period) {
+            fetch(`/QuanLyGianHang/GetRevenueData?period=${period}`)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        initChart(data.labels, data.revenues);
+                    }
+                });
+        }
+
+        loadChartData('7days');
+
+        const periodSelect = document.getElementById('chartPeriodSelect');
+        if (periodSelect) {
+            periodSelect.addEventListener('change', function() {
+                loadChartData(this.value);
+            });
+        }
+    });
+</script>
+
+<style>
+    .hover-zoom { transition: transform 0.2s ease; }
+    .hover-zoom:hover { transform: scale(1.02); }
+</style>

@@ -1,0 +1,92 @@
+﻿@{
+    var currentAction = ViewContext.RouteData.Values["Action"].ToString();
+    var currentController = ViewContext.RouteData.Values["Controller"].ToString();
+}
+
+<aside class="sidebar bg-dark text-white shadow-lg" style="height: calc(100vh - 60px); position: fixed; left: 0; top: 60px; width: 250px; overflow-y: auto; z-index: 999; padding-bottom: 30px;">
+    <nav class="navbar-nav flex-column p-3">
+        <h5 class="mb-4 text-warning fw-bold">⚙️ QUẢN TRỊ VIÊN</h5>
+
+        <a asp-controller="Admin" asp-action="Index"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "Index" ? "active" : "")"
+           style="@(currentAction == "Index" ? "background-color: #007bff; font-weight: bold;" : "")">
+            📊 Dashboard
+        </a>
+
+        <h6 class="text-muted mt-4 mb-2">QUẢN LÝ ĐỐI TÁC</h6>
+
+        <a asp-controller="Admin" asp-action="QuanLyDoiTac"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyDoiTac" ? "active" : "")"
+           style="@(currentAction == "QuanLyDoiTac" ? "background-color: #007bff; font-weight: bold;" : "")">
+            🏪 Hồ Sơ & Doanh Thu
+        </a>
+
+        <a asp-controller="Admin" asp-action="DanhGiaGianHang"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "DanhGiaGianHang" ? "active" : "")"
+           style="@(currentAction == "DanhGiaGianHang" ? "background-color: #007bff; font-weight: bold;" : "")">
+            ⭐ Đánh Giá & Phản Hồi
+        </a>
+
+        <a asp-controller="Admin" asp-action="SaoKeDoanhThu"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "SaoKeDoanhThu" ? "active" : "")"
+           style="@(currentAction == "SaoKeDoanhThu" ? "background-color: #007bff; font-weight: bold;" : "")">
+            💰 Sao Kê Doanh Thu
+        </a>
+
+
+
+
+
+
+        <h6 class="text-muted mt-4 mb-2">CẤU HÌNH HỆ THỐNG</h6>
+
+        <a asp-controller="Admin" asp-action="QuanLyTaiKhoan"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyTaiKhoan" ? "active" : "")"
+           style="@(currentAction == "QuanLyTaiKhoan" ? "background-color: #007bff; font-weight: bold;" : "")">
+            🔐 Tài Khoản
+        </a>
+
+        <a asp-controller="Admin" asp-action="QuanLyDieuLe"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyDieuLe" ? "active" : "")"
+           style="@(currentAction == "QuanLyDieuLe" ? "background-color: #007bff; font-weight: bold;" : "")">
+            📋 Điều Lệ
+        </a>
+
+        <a asp-controller="Admin" asp-action="QuanLyKhuyenMai"
+           class="nav-link text-white mb-2 rounded px-3 py-2 @(currentAction == "QuanLyKhuyenMai" ? "active" : "")"
+           style="@(currentAction == "QuanLyKhuyenMai" ? "background-color: #007bff; font-weight: bold;" : "")">
+            🎁 Khuyến Mãi
+        </a>
+
+        <hr class="bg-white" />
+
+        <a asp-controller="Account" asp-action="DangXuat" class="nav-link text-danger mb-2 rounded px-3 py-2">
+            🚪 Đăng Xuất
+        </a>
+    </nav>
+</aside>
+
+<style>
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+    }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .nav-link:hover:not(.active) {
+            background-color: rgba(255,255,255,0.1) !important;
+        }
+</style>
+
+

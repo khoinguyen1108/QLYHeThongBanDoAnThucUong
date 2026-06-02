@@ -1,0 +1,128 @@
+﻿@model NangCapDoiTacViewModel
+
+@{
+    ViewData["Title"] = "Đăng Ký Gian Hàng";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Đăng Ký Gian Hàng</h3>
+
+                    <!-- Alert: Đọc Điều Lệ -->
+                    <div class="alert alert-info">
+                        <h5>⚠️ Điều Lệ Gian Hàng</h5>
+                        <p>Vui lòng chọn và đọc kỹ điều lệ gian hàng trước khi đăng ký:</p>
+
+                        <div class="mb-3">
+                            <label for="MaDieuLe" class="form-label">Chọn Điều Lệ:</label>
+                            <select class="form-control" id="MaDieuLe" asp-for="MaDieuLe" required onchange="showDieuLe()">
+                                <option value="">-- Chọn Điều Lệ --</option>
+                                @foreach (var dl in (List<DieuLe>) ViewBag.DieuLes)
+                                {
+                                    <option value="@dl.MaDieuLe">@dl.TenDieuLe - Chiết khấu: @dl.PhiChietKhau%</option>
+                                }
+                            </select>
+                        </div>
+
+                       @*  <div id="dieuLeContent" class="border p-3 rounded" style="display:none;">
+                            <!-- Chi tiết điều lệ hiển thị ở đây -->
+                        </div> *@
+
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" id="confirmDieuLe" required>
+                            <label class="form-check-label" for="confirmDieuLe">
+                                Tôi đã đọc và đồng ý với điều lệ gian hàng
+                            </label>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Form Đăng Ký -->
+                    <form method="post">
+                        <h5>Thông Tin Tài Khoản</h5>
+
+                        <div class="mb-3">
+                            <label for="TenDangNhap" class="form-label">Tên Đăng Nhập</label>
+                            <input type="text" class="form-control" asp-for="TenDangNhap" required>
+                            <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="MatKhau" class="form-label">Mật Khẩu</label>
+                            <input type="password" class="form-control" asp-for="MatKhau" required>
+                            <span asp-validation-for="MatKhau" class="text-danger"></span>
+                        </div>
+
+                        <h5 class="mt-4">Thông Tin Gian Hàng</h5>
+
+                        <div class="mb-3">
+                            <label for="TenQuanDoiTac" class="form-label">Tên Cửa Hàng</label>
+                            <input type="text" class="form-control" asp-for="TenQuanDoiTac" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="TenGianHang" class="form-label">Tên Gian Hàng</label>
+                            <input type="text" class="form-control" asp-for="TenGianHang" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="SoDTDoiTac" class="form-label">Số Điện Thoại</label>
+                            <input type="tel" class="form-control" asp-for="SoDTDoiTac" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="EmailDTac" class="form-label">Email</label>
+                            <input type="email" class="form-control" asp-for="EmailDTac" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="DiaChiDoiTac" class="form-label">Địa Chỉ Cửa Hàng</label>
+                            <input type="text" class="form-control" asp-for="DiaChiDoiTac" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="DiaChiGianHang" class="form-label">Địa Chỉ Gian Hàng</label>
+                            <input type="text" class="form-control" asp-for="DiaChiGianHang" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="GioMo" class="form-label">Giờ Mở Cửa</label>
+                                <input type="time" class="form-control" asp-for="GioMo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="GioDong" class="form-label">Giờ Đóng Cửa</label>
+                                <input type="time" class="form-control" asp-for="GioDong" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Đăng Ký Gian Hàng</button>
+                    </form>
+
+                    <div class="text-center">
+                        <p><a asp-action="DangNhap">Quay lại Đăng Nhập</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDieuLe() {
+        var dieuLeSelect = document.getElementById("MaDieuLe");
+        var selectedValue = dieuLeSelect.options[dieuLeSelect.selectedIndex];
+
+        if (selectedValue.value) {
+            // Có thể gọi API để lấy chi tiết điều lệ
+            document.getElementById("dieuLeContent").innerHTML = selectedValue.text;
+            document.getElementById("dieuLeContent").style.display = "block";
+        } else {
+            document.getElementById("dieuLeContent").style.display = "none";
+        }
+    }
+</script>
