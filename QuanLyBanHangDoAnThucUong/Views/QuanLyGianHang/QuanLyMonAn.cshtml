@@ -1,4 +1,4 @@
-﻿@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
+@model QuanLyBanHangDoAnThucUong.Models.Entities.GianHang
 
 @{
     ViewData["Title"] = "Quản Lý Món Ăn";
@@ -101,6 +101,12 @@
                 <a class="nav-link fw-bold @(ViewBag.Status == "Hết món" ? "active rounded-pill bg-danger" : "text-dark")" 
                    href="/QuanLyGianHang/QuanLyMonAn?status=Hết món">
                     Hết Món / Tạm Ngưng
+                </a>
+            </li>
+            <li class="nav-item flex-fill text-center">
+                <a class="nav-link fw-bold @(ViewBag.Status == "Món mới" ? "active rounded-pill bg-warning text-dark" : "text-dark")" 
+                   href="/QuanLyGianHang/QuanLyMonAn?status=Món mới">
+                    Món Mới
                 </a>
             </li>
         </ul>

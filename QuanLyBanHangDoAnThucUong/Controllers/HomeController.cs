@@ -413,24 +413,38 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             // Kiểm tra quyền đánh giá (Chỉ khách hàng đã mua món và đơn hàng "Hoàn thành" mới được đánh giá)
             bool canReview = false;
+            int? availableOrderId = null;
             var maKH = GetCurrentCustomerId();
             if (maKH != null)
             {
-                var purchaseCount = await _context.DonHangs
-                    .Include(d => d.ChiTietDonHangs)
-                    .ThenInclude(c => c.BienTheMonAn)
+                var eligibleOrders = await _context.DonHangs
                     .Where(d => d.MaKH == maKH && 
-                                   d.TrangThaiDonHang == "Hoàn thành" && 
-                                   d.TrangThaiThanhToan == "Đã thanh toán" &&
-                                   d.ChiTietDonHangs.Any(c => c.BienTheMonAn.MaMonAn == id))
-                    .CountAsync();
+                                (d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao") && 
+                                d.ChiTietDonHangs.Any(c => c.BienTheMonAn.MaMonAn == id))
+                    .Select(d => d.MaDonHang)
+                    .ToListAsync();
 
-                var reviewCount = await _context.DanhGiaMonAns
-                    .CountAsync(d => d.MaKH == maKH && d.MaMonAn == id);
+                var reviewedOrders = await _context.DanhGiaMonAns
+                    .Where(dg => dg.MaKH == maKH && dg.MaMonAn == id && dg.MaDonHang != null)
+                    .Select(dg => dg.MaDonHang.Value)
+                    .ToListAsync();
 
-                canReview = purchaseCount > 0 && purchaseCount > reviewCount;
+                var unreviewedOrders = eligibleOrders.Except(reviewedOrders).ToList();
+                canReview = unreviewedOrders.Any();
+                availableOrderId = unreviewedOrders.FirstOrDefault();
+
+                if (!canReview)
+                {
+                    var purchaseCount = eligibleOrders.Count;
+                    var totalReviews = await _context.DanhGiaMonAns.CountAsync(d => d.MaKH == maKH && d.MaMonAn == id);
+                    if (purchaseCount > totalReviews)
+                    {
+                        canReview = true;
+                    }
+                }
             }
             ViewBag.CanReview = canReview;
+            ViewBag.AvailableOrderId = availableOrderId;
 
             return View(monAn);
         }
@@ -508,6 +522,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                     d.NoiDung,
                     d.NgayDanhGia,
                     TenKH = d.KhachHang != null ? d.KhachHang.TenKH : "Ẩn danh",
+                    Avatar = d.KhachHang != null ? d.KhachHang.Avatar : null,
                     d.PhanHoiCuaDoiTac,
                     d.NgayPhanHoi
                 })
@@ -521,6 +536,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 d.NoiDung,
                 NgayDanhGia = d.NgayDanhGia.ToString("dd/MM/yyyy HH:mm"),
                 d.TenKH,
+                d.Avatar,
                 d.PhanHoiCuaDoiTac,
                 IsOwner = (maKH != null && d.MaKH == maKH),
                 NgayPhanHoi = d.NgayPhanHoi.HasValue ? d.NgayPhanHoi.Value.ToString("dd/MM/yyyy HH:mm") : null
@@ -548,7 +564,6 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
         }
 
         [HttpPost]
-        [HttpPost]
         public async Task<IActionResult> XoaDanhGia(int id)
         {
             var maKH = GetCurrentCustomerId();
@@ -562,7 +577,8 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             return Json(new { success = true, message = "Đã xóa đánh giá" });
         }
-        public async Task<IActionResult> ThemDanhGia([FromBody] Models.Entities.DanhGiaMonAn model)
+        [HttpPost]
+        public async Task<IActionResult> ThemDanhGia(int maMonAn, int soSao, string? noiDung, int? maDonHang)
         {
             var maKH = HttpContext.Session.GetInt32("MaKH");
             if (maKH == null)
@@ -580,72 +596,22 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             if (maKH == null)
                 return Json(new { success = false, requireLogin = true, message = "Vui lòng đăng nhập để đánh giá." });
 
-            // Đếm số lần khách hàng mua món này (số đơn hàng thành công chứa món này)
-            var purchaseCount = await _context.DonHangs
-                .Where(d => d.MaKH == maKH
-                            && d.TrangThaiDonHang == "Hoàn thành"
-                            && d.TrangThaiThanhToan == "Đã thanh toán"
-                            && d.ChiTietDonHangs.Any(ct => ct.BienTheMonAn.MaMonAn == model.MaMonAn))
-                .CountAsync();
-
-            if (purchaseCount == 0)
-            {
-                return Json(new { success = false, message = "Bạn chỉ có thể đánh giá những món ăn đã đặt mua và thanh toán thành công." });
-            }
-
-            // Đếm số lần khách hàng đã đánh giá món này
-            var reviewCount = await _context.DanhGiaMonAns
-                .CountAsync(d => d.MaKH == maKH && d.MaMonAn == model.MaMonAn);
-
-            if (reviewCount >= purchaseCount)
-            {
-                return Json(new { success = false, message = "Bạn đã hết lượt đánh giá cho món ăn này. Hãy đặt mua thêm để có thể tiếp tục đánh giá nhé!" });
-            }
-
             try
             {
                 var danhGia = new Models.Entities.DanhGiaMonAn
                 {
-                    MaMonAn = model.MaMonAn,
+                    MaMonAn = maMonAn,
                     MaKH = maKH,
-                    SoSao = model.SoSao,
-                    NoiDung = model.NoiDung,
+                    MaDonHang = maDonHang,
+                    SoSao = soSao,
+                    NoiDung = noiDung,
                     NgayDanhGia = DateTime.Now
                 };
 
                 _context.DanhGiaMonAns.Add(danhGia);
                 await _context.SaveChangesAsync();
                 
-                // Cập nhật số sao trung bình của Món Ăn
-                var monAn = await _context.MonAns.FindAsync(model.MaMonAn);
-                if (monAn != null)
-                {
-                    var allReviewsMonAn = await _context.DanhGiaMonAns.Where(d => d.MaMonAn == model.MaMonAn).ToListAsync();
-                    if (allReviewsMonAn.Any())
-                    {
-                        monAn.SoLuotDanhGia = allReviewsMonAn.Count;
-                        monAn.SoSaoTrungBinh = (decimal)allReviewsMonAn.Average(d => d.SoSao);
-                        _context.MonAns.Update(monAn);
-                        await _context.SaveChangesAsync();
-                        
-                        // Cập nhật điểm trung bình của Gian Hàng
-                        var gianHang = await _context.GianHangs.FindAsync(monAn.MaGianHang);
-                        if (gianHang != null)
-                        {
-                            var allReviewsGH = await _context.DanhGiaMonAns
-                                .Include(d => d.MonAn)
-                                .Where(d => d.MonAn.MaGianHang == gianHang.MaGianHang)
-                                .ToListAsync();
-                                
-                            if (allReviewsGH.Any())
-                            {
-                                gianHang.DanhGiaTB = (decimal)allReviewsGH.Average(d => d.SoSao);
-                                _context.GianHangs.Update(gianHang);
-                                await _context.SaveChangesAsync();
-                            }
-                        }
-                    }
-                }
+                // (Trigger trg_UpdateDanhGiaMonAn trong SQL Server sẽ tự động tính lại số sao cho MonAn và GianHang)
                 
                 return Json(new { success = true, message = "Đánh giá thành công!" });
             }

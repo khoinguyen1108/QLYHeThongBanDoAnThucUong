@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBanHangDoAnThucUong.Data;
 using QuanLyBanHangDoAnThucUong.Models.Entities;
@@ -149,18 +149,30 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             ctGioHang.SoLuong += change;
             
+            bool removed = false;
+            decimal newPrice = 0;
+            int newQuantity = 0;
+
             if (ctGioHang.SoLuong <= 0)
             {
                 _context.CT_GioHangs.Remove(ctGioHang);
+                removed = true;
             }
             else
             {
                 ctGioHang.UocTinhThanhTien = ctGioHang.SoLuong * ctGioHang.GiaBan;
+                newPrice = ctGioHang.UocTinhThanhTien;
+                newQuantity = ctGioHang.SoLuong;
             }
 
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true });
+            return Json(new { 
+                success = true,
+                removed = removed,
+                newPrice = newPrice,
+                newQuantity = newQuantity
+            });
         }
 
         [HttpPost]
@@ -309,7 +321,8 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                         PhiShip = phiGiaoHangMotQuan,
                         ThanhTienKhachTra = thanhTienCuoi,
                         TrangThaiDonHang = "Chờ xác nhận",
-                        NgayTaoDon = DateTime.Now
+                        NgayTaoDon = DateTime.Now,
+                        PhuongThucThanhToan = phuongThucThanhToan
                     };
                     
                     _context.DonHangs.Add(donHang);

@@ -72,7 +72,12 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             if (taiKhoan.TrangThai == "Bị khóa")
             {
-                ModelState.AddModelError("", "Tài khoản của bạn đã bị khóa");
+                string msg = "Tài khoản của bạn đã bị khóa.";
+                if (!string.IsNullOrEmpty(taiKhoan.LyDoHuy))
+                {
+                    msg += $" Lý do: {taiKhoan.LyDoHuy}";
+                }
+                ModelState.AddModelError("", msg);
                 return View("DangNhap", model);
             }
 

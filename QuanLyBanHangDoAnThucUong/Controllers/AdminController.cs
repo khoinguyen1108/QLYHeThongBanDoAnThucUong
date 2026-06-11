@@ -51,7 +51,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             // --- TÍNH TOÁN DOANH THU TOÀN HỆ THỐNG ---
             var completedOrders = await _context.DonHangs
-                .Where(d => d.TrangThaiDonHang == "Hoàn thành")
+                .Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao")
                 .ToListAsync();
 
             var today = DateTime.Today;
@@ -79,6 +79,67 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             ViewBag.Dashboard = dashboard;
             ViewBag.RecentPartners = recentPartners;
             return View();
+        }
+
+        // ===== API LẤY DỮ LIỆU BIỂU ĐỒ ADMIN =====
+        [HttpGet]
+        public async Task<IActionResult> GetAdminChartData(string filter)
+        {
+            if (!CheckIsAdmin()) return Unauthorized();
+
+            var completedOrders = await _context.DonHangs
+                .Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao")
+                .ToListAsync();
+
+            var today = DateTime.Today;
+            var labels = new List<string>();
+            var data = new List<decimal>();
+            string title = "";
+
+            if (filter == "daily")
+            {
+                // Today's hours
+                title = "Biểu Đồ Doanh Thu Hôm Nay";
+                for (int i = 8; i <= 22; i += 2) // 8h to 22h
+                {
+                    labels.Add($"{i}h");
+                    var rev = completedOrders
+                        .Where(d => d.NgayTaoDon.Date == today && d.NgayTaoDon.Hour >= i && d.NgayTaoDon.Hour < i + 2)
+                        .Sum(d => d.ThanhTienKhachTra);
+                    data.Add(rev);
+                }
+            }
+            else if (filter == "monthly")
+            {
+                title = $"Biểu Đồ Doanh Thu Tháng {today.Month}";
+                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                var daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
+                var interval = daysInMonth / 6; // Create about 6-7 points
+
+                for (int i = 1; i <= daysInMonth; i += interval)
+                {
+                    var d = startOfMonth.AddDays(i - 1);
+                    var endD = d.AddDays(interval - 1);
+                    if (endD.Month != today.Month) endD = new DateTime(today.Year, today.Month, daysInMonth);
+                    
+                    labels.Add(d.Day == endD.Day ? $"{d.Day}/{d.Month}" : $"{d.Day}-{endD.Day}/{d.Month}");
+                    var rev = completedOrders
+                        .Where(o => o.NgayTaoDon.Date >= d && o.NgayTaoDon.Date <= endD)
+                        .Sum(o => o.ThanhTienKhachTra);
+                    data.Add(rev);
+                }
+            }
+            else // 'total' or 'yearly'
+            {
+                title = "Biểu Đồ Doanh Thu";
+                for (int i = 1; i <= 12; i++)
+                {
+                    labels.Add($"T{i}");
+                    data.Add(completedOrders.Where(o => o.NgayTaoDon.Year == today.Year && o.NgayTaoDon.Month == i).Sum(o => o.ThanhTienKhachTra));
+                }
+            }
+
+            return Json(new { success = true, labels, data, title });
         }
 
         // ===== QUẢN LÝ ĐỐI TÁC =====
@@ -142,14 +203,13 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             var yearlyRev = orders.Where(d => d.NgayTaoDon >= startOfYear).Sum(d => d.ThanhTienKhachTra);
             var totalRev = orders.Sum(d => d.ThanhTienKhachTra);
 
-            // Dữ liệu biểu đồ 7 ngày qua
+            // Dữ liệu biểu đồ doanh thu theo năm
             var labels = new List<string>();
             var data = new List<decimal>();
-            for (int i = 6; i >= 0; i--)
+            for (int i = 1; i <= 12; i++)
             {
-                var d = today.AddDays(-i);
-                labels.Add(d.ToString("dd/MM"));
-                data.Add(orders.Where(o => o.NgayTaoDon.Date == d).Sum(o => o.ThanhTienKhachTra));
+                labels.Add($"T{i}");
+                data.Add(orders.Where(o => o.NgayTaoDon.Year == today.Year && o.NgayTaoDon.Month == i).Sum(o => o.ThanhTienKhachTra));
             }
 
             return Json(new {
@@ -181,7 +241,67 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDoiTacOrders(int maDoiTac, int page = 1)
+        public async Task<IActionResult> GetDoiTacChartData(int maDoiTac, string filter)
+        {
+            if (!CheckIsAdmin()) return Unauthorized();
+
+            var gianHang = await _context.GianHangs.FirstOrDefaultAsync(g => g.MaDoiTac == maDoiTac);
+            if (gianHang == null) return Json(new { success = false, message = "Not found" });
+
+            var orders = await _context.DonHangs
+                .Where(d => d.MaGianHang == gianHang.MaGianHang && (d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao"))
+                .ToListAsync();
+
+            var today = DateTime.Today;
+            var labels = new List<string>();
+            var data = new List<decimal>();
+
+            if (filter == "daily")
+            {
+                for (int i = 8; i <= 22; i += 2)
+                {
+                    labels.Add($"{i}h");
+                    data.Add(orders.Where(o => o.NgayTaoDon.Date == today && o.NgayTaoDon.Hour >= i && o.NgayTaoDon.Hour < i + 2).Sum(o => o.ThanhTienKhachTra));
+                }
+            }
+            else if (filter == "monthly")
+            {
+                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                var daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
+                var interval = daysInMonth / 6;
+
+                for (int i = 1; i <= daysInMonth; i += interval)
+                {
+                    var d = startOfMonth.AddDays(i - 1);
+                    var endD = d.AddDays(interval - 1);
+                    if (endD.Month != today.Month) endD = new DateTime(today.Year, today.Month, daysInMonth);
+                    
+                    labels.Add(d.Day == endD.Day ? $"{d.Day}/{d.Month}" : $"{d.Day}-{endD.Day}/{d.Month}");
+                    data.Add(orders.Where(o => o.NgayTaoDon.Date >= d && o.NgayTaoDon.Date <= endD).Sum(o => o.ThanhTienKhachTra));
+                }
+            }
+            else if (filter == "yearly")
+            {
+                for (int i = 1; i <= 12; i++)
+                {
+                    labels.Add($"T{i}");
+                    data.Add(orders.Where(o => o.NgayTaoDon.Year == today.Year && o.NgayTaoDon.Month == i).Sum(o => o.ThanhTienKhachTra));
+                }
+            }
+            else // 'total'
+            {
+                for (int i = 1; i <= 12; i++)
+                {
+                    labels.Add($"T{i}");
+                    data.Add(orders.Where(o => o.NgayTaoDon.Year == today.Year && o.NgayTaoDon.Month == i).Sum(o => o.ThanhTienKhachTra));
+                }
+            }
+
+            return Json(new { success = true, labels, data });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDoiTacOrders(int maDoiTac, int page = 1, string searchStr = null, string tuNgay = null, string denNgay = null, string trangThai = null, string sortOrder = "newest")
         {
             if (!CheckIsAdmin()) return Json(new { success = false, message = "Unauthorized" });
 
@@ -193,11 +313,47 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 .Include(d => d.KhachHang)
                 .Where(d => d.MaGianHang == gianHang.MaGianHang);
 
+            // Tìm kiếm theo Mã Đơn hoặc Tên Khách Hàng
+            if (!string.IsNullOrEmpty(searchStr))
+            {
+                query = query.Where(d => d.MaDonHang.ToString().Contains(searchStr) || 
+                                        (d.KhachHang != null && d.KhachHang.TenKH.Contains(searchStr)));
+            }
+
+            // Lọc theo ngày
+            if (!string.IsNullOrEmpty(tuNgay) && DateTime.TryParse(tuNgay, out DateTime dtTuNgay))
+            {
+                query = query.Where(d => d.NgayTaoDon.Date >= dtTuNgay.Date);
+            }
+            if (!string.IsNullOrEmpty(denNgay) && DateTime.TryParse(denNgay, out DateTime dtDenNgay))
+            {
+                query = query.Where(d => d.NgayTaoDon.Date <= dtDenNgay.Date);
+            }
+
+            // Lọc theo trạng thái
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                query = query.Where(d => d.TrangThaiDonHang == trangThai);
+            }
+
+            // Sắp xếp
+            if (sortOrder == "price_asc")
+            {
+                query = query.OrderBy(d => d.ThanhTienKhachTra);
+            }
+            else if (sortOrder == "price_desc")
+            {
+                query = query.OrderByDescending(d => d.ThanhTienKhachTra);
+            }
+            else // newest
+            {
+                query = query.OrderByDescending(d => d.NgayTaoDon);
+            }
+
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
             var orders = await query
-                .OrderByDescending(d => d.NgayTaoDon)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(d => new {
@@ -254,7 +410,8 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                     tienGiam = order.GiamGia,
                     thanhTienKhachTra = order.ThanhTienKhachTra,
                     trangThai = order.TrangThaiDonHang,
-                    thanhToan = order.TrangThaiThanhToan
+                    thanhToan = order.TrangThaiThanhToan,
+                    phuongThucThanhToan = order.PhuongThucThanhToan
                 },
                 items = details
             });
@@ -272,7 +429,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             {
                 query = query.Where(g => g.TenGianHang != null && g.TenGianHang.Contains(searchStr));
             }
-
+ 
             var totalCount = await query.CountAsync();
             var totalPages = (int) Math.Ceiling((double) totalCount / pageSize);
 
@@ -332,9 +489,9 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 query = query.Where(k => k.TenKH.Contains(searchStr) || k.SoDTKH.Contains(searchStr));
             }
 
-            var khachHangs = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var khachHangs = await query 
+                .Skip((page - 1) * pageSize) // Phân trang. Skip dung de bo qua cac ban ghi cua cac trang truoc, Take dung de lay so ban ghi cua trang hien tai
+                .Take(pageSize)// Lay so ban ghi cua trang hien tai
                 .ToListAsync();
 
             var totalCount = await query.CountAsync();
@@ -383,7 +540,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
         // ===== QUẢN LÝ TÀI KHOẢN =====
         [HttpGet]
-        public async Task<IActionResult> QuanLyTaiKhoan(int page = 1, string searchStr = null, string role = "KhachHang")
+        public async Task<IActionResult> QuanLyTaiKhoan(int page = 1, string searchStr = null, string role = "KhachHang", string trangThai = null, string tuNgay = null, string denNgay = null)
         {
             if (!CheckIsAdmin())
                 return RedirectToAction("DangNhap", "Account");
@@ -401,6 +558,20 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 query = query.Where(t => t.TenDangNhap.Contains(searchStr));
             }
 
+            if (!string.IsNullOrEmpty(trangThai) && trangThai != "All")
+            {
+                query = query.Where(t => t.TrangThai == trangThai);
+            }
+
+            if (!string.IsNullOrEmpty(tuNgay) && DateTime.TryParse(tuNgay, out DateTime dtTuNgay))
+            {
+                query = query.Where(t => t.NgayTao.Date >= dtTuNgay.Date);
+            }
+            if (!string.IsNullOrEmpty(denNgay) && DateTime.TryParse(denNgay, out DateTime dtDenNgay))
+            {
+                query = query.Where(t => t.NgayTao.Date <= dtDenNgay.Date);
+            }
+
             var taiKhoans = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -414,6 +585,9 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             ViewBag.TotalCount = totalCount;
             ViewBag.SearchStr = searchStr;
             ViewBag.CurrentRole = role;
+            ViewBag.CurrentTrangThai = trangThai;
+            ViewBag.TuNgay = tuNgay;
+            ViewBag.DenNgay = denNgay;
 
             ViewBag.CountKhachHang = await _context.TaiKhoans.CountAsync(t => t.VaiTro.TenVaiTro == "KhachHang");
             ViewBag.CountDoiTac = await _context.TaiKhoans.CountAsync(t => t.VaiTro.TenVaiTro == "DoiTac");
@@ -468,8 +642,9 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 info = new {
                     username = tk.TenDangNhap,
                     role = roleName,
-                    ngayTao = "N/A", // TaiKhoan không có NgayTao
-                    trangThai = tk.TrangThai
+                    ngayTao = tk.NgayTao.ToString("dd/MM/yyyy HH:mm"),
+                    trangThai = tk.TrangThai,
+                    lyDoHuy = tk.LyDoHuy
                 },
                 personal = personalInfo
             });
@@ -715,7 +890,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                     && d.TrangThaiDonHang != "Đã hủy" && d.TrangThaiDonHang != "Từ chối")
                 .ToListAsync();
 
-            var tongDoanhThu = donHangs.Sum(d => d.ThanhTienKhachTra);
+            var tongDoanhThu = donHangs.Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao").Sum(d => d.ThanhTienKhachTra);
             var tongDonHang = donHangs.Count;
             var donThanhCong = donHangs.Count(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao");
             var donChoXuLy = donHangs.Count(d => d.TrangThaiDonHang == "Chờ xác nhận" || d.TrangThaiDonHang == "Đã xác nhận" || d.TrangThaiDonHang == "Đang chuẩn bị" || d.TrangThaiDonHang == "Đang giao");
@@ -724,17 +899,17 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             var daysInMonth = DateTime.DaysInMonth(selYear, selMonth);
             var dailyRevenue = new List<object>();
             
-            // Nếu là tháng hiện tại, chỉ hiện 7 ngày gần nhất hoặc biểu đồ theo ngày
-            // Để đơn giản và đẹp, ta lấy tất cả các ngày có doanh thu trong tháng đó
-            var revenueByDay = donHangs.GroupBy(d => d.NgayTaoDon.Day)
+            var revenueByDay = donHangs.Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao")
+                                     .GroupBy(d => d.NgayTaoDon.Day)
                                      .Select(g => new { Day = g.Key, Amount = g.Sum(x => x.ThanhTienKhachTra) })
-                                     .OrderBy(x => x.Day)
                                      .ToList();
 
-            foreach(var r in revenueByDay) {
+            for (int i = 1; i <= daysInMonth; i++)
+            {
+                var r = revenueByDay.FirstOrDefault(x => x.Day == i);
                 dailyRevenue.Add(new {
-                    Ngay = $"{r.Day:D2}/{selMonth:D2}",
-                    DoanhThu = r.Amount
+                    ngay = $"{i:D2}/{selMonth:D2}",
+                    doanhThu = r != null ? r.Amount : 0
                 });
             }
 
@@ -928,7 +1103,9 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             int pageSize = length != null ? Convert.ToInt32(length) : 10;
             int skip = start != null ? Convert.ToInt32(start) : 0;
 
-            var query = _context.DonHangs.Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao");
+            var query = _context.DonHangs
+                .Include(d => d.GianHang)
+                .Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao");
 
             if (!string.IsNullOrEmpty(tuNgay) && DateTime.TryParse(tuNgay, out DateTime dtTuNgay))
             {
@@ -972,6 +1149,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             var data = dataList.Select(d => new
             {
                 maDonHang = d.MaDonHang,
+                tenQuan = d.GianHang != null ? d.GianHang.TenGianHang : "N/A",
                 ngayTao = d.NgayTaoDon.ToString("dd/MM/yyyy HH:mm"),
                 tongTienMon = d.TongTienMon,
                 giamGia = d.GiamGia,
@@ -982,6 +1160,41 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             }).ToList();
 
             return Json(new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CapNhatTrangThaiTaiKhoan(int maTaiKhoan, string lyDo)
+        {
+            if (!CheckIsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            var taiKhoan = await _context.TaiKhoans.FindAsync(maTaiKhoan);
+            if (taiKhoan == null) return Json(new { success = false, message = "Không tìm thấy tài khoản" });
+
+            if (taiKhoan.MaVaiTro == _context.VaiTros.FirstOrDefault(v => v.TenVaiTro == "Admin")?.MaVaiTro)
+            {
+                return Json(new { success = false, message = "Không thể khóa tài khoản Admin" });
+            }
+
+            taiKhoan.TrangThai = "Bị khóa";
+            taiKhoan.LyDoHuy = lyDo;
+            
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Đã khóa tài khoản thành công" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MoKhoaTaiKhoan(int maTaiKhoan)
+        {
+            if (!CheckIsAdmin()) return Json(new { success = false, message = "Unauthorized" });
+
+            var taiKhoan = await _context.TaiKhoans.FindAsync(maTaiKhoan);
+            if (taiKhoan == null) return Json(new { success = false, message = "Không tìm thấy tài khoản" });
+
+            taiKhoan.TrangThai = "Hoạt động";
+            taiKhoan.LyDoHuy = null;
+            
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Đã mở khóa tài khoản thành công" });
         }
     }
 }

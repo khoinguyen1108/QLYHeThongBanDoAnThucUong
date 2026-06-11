@@ -22,6 +22,7 @@ namespace QuanLyBanHangDoAnThucUong.Models.Entities
         public decimal ThanhTienQuanNhan { get; set; }
         public string TrangThaiDonHang { get; set; } = "Chờ xác nhận";
         public string TrangThaiThanhToan { get; set; } = "Chưa thanh toán";
+        public string PhuongThucThanhToan { get; set; } = "Tiền mặt";
         public string? LyDoHuy { get; set; }
         public string? GhiChu { get; set; }
         public int? MaDiaChi { get; set; }

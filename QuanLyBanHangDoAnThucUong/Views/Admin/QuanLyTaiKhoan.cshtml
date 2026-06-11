@@ -1,4 +1,4 @@
-﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@using QuanLyBanHangDoAnThucUong.Models.Entities
 @model List<TaiKhoan>
 
 @{
@@ -147,6 +147,7 @@
                                     <table class="table table-borderless table-sm">
                                         <tr><td class="text-muted w-25">Mật khẩu:</td><td><span class="badge bg-light text-dark border">**********</span></td></tr>
                                         <tr><td class="text-muted">Ngày tạo:</td><td id="dt-ngaytao"></td></tr>
+                                        <tr id="tr-lydohuy" class="d-none"><td class="text-danger">Lý do khóa:</td><td id="dt-lydohuy" class="text-danger fw-bold"></td></tr>
                                     </table>
                                 </div>
                                 
@@ -164,6 +165,11 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <!-- Nút Thao tác -->
+                        <div class="mt-auto border-top pt-3 text-end" id="action-buttons">
+                            <button id="btn-khoa" class="btn btn-danger d-none" onclick="lockAccount()"><i class="bi bi-lock-fill me-1"></i> Khóa Tài Khoản</button>
+                            <button id="btn-mokhoa" class="btn btn-success d-none" onclick="unlockAccount()"><i class="bi bi-unlock-fill me-1"></i> Mở Khóa Tài Khoản</button>
                         </div>
                     </div>
                 </div>

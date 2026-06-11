@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Sao Kê Doanh Thu";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -92,6 +92,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Mã Đơn</th>
+                                <th>Tên Quán</th>
                                 <th>Ngày Tạo</th>
                                 <th>Tổng Tiền Món</th>
                                 <th>Giảm Giá</th>
@@ -134,6 +135,7 @@
                 },
                 "columns": [
                     { "data": "maDonHang", "name": "Mã Đơn", "className": "fw-bold text-center" },
+                    { "data": "tenQuan", "name": "Tên Quán", "className": "fw-bold text-primary" },
                     { "data": "ngayTao", "name": "Ngày Tạo" },
                     { "data": "tongTienMon", "name": "Tổng Tiền Món", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ') },
                     { "data": "giamGia", "name": "Giảm Giá", render: $.fn.dataTable.render.number(',', '.', 0, '', 'đ'), "className": "text-danger" },

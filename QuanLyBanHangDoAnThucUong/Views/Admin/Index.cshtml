@@ -28,7 +28,8 @@
         <div class="row mb-4">
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
-                     style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                     style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); cursor: pointer;"
+                     onclick="updateAdminChart('total')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Tổng doanh thu</h6>
@@ -44,7 +45,8 @@
 
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
-                     style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                     style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); cursor: pointer;"
+                     onclick="updateAdminChart('monthly')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Doanh thu tháng này</h6>
@@ -60,7 +62,8 @@
 
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100 position-relative overflow-hidden text-white" 
-                     style="background: linear-gradient(135deg, #f12711 0%, #f5af19 100%);">
+                     style="background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); cursor: pointer;"
+                     onclick="updateAdminChart('daily')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="text-uppercase fw-bold opacity-75 mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">Doanh thu hôm nay</h6>
@@ -140,7 +143,7 @@
                 <div class="card shadow-sm border-0 rounded-4">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Biểu Đồ Doanh Thu (7 Ngày Qua)</h5>
+                            <h5 class="fw-bold text-dark mb-0" id="adminChartTitle"><i class="bi bi-graph-up text-primary me-2"></i>Biểu Đồ Doanh Thu</h5>
                         </div>
                         <div style="height: 350px;">
                             <canvas id="adminRevenueChart"></canvas>
@@ -256,73 +259,91 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var chartLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartLabels));
-        var chartData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartData));
+    var adminChartInstance = null;
 
-        if(chartLabels && chartLabels.length > 0 && chartData && chartData.length > 0) {
-            const ctx = document.getElementById('adminRevenueChart').getContext('2d');
-            
-            const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-            gradient.addColorStop(0, 'rgba(42, 82, 152, 0.5)'); // match premium primary
-            gradient.addColorStop(1, 'rgba(42, 82, 152, 0.0)');
+    function initChart(labels, data) {
+        const ctx = document.getElementById('adminRevenueChart').getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+        gradient.addColorStop(0, 'rgba(42, 82, 152, 0.5)'); // match premium primary
+        gradient.addColorStop(1, 'rgba(42, 82, 152, 0.0)');
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        label: 'Doanh thu (VNĐ)',
-                        data: chartData,
-                        borderColor: '#2a5298',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#2a5298',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.raw.toLocaleString('vi-VN') + ' đ';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
-                            ticks: {
-                                callback: function(value) {
-                                    if(value >= 1000000) return (value / 1000000).toFixed(1) + ' Tr';
-                                    if(value >= 1000) return (value / 1000).toFixed(0) + ' k';
-                                    return value;
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index',
-                    },
-                }
-            });
+        if (adminChartInstance) {
+            adminChartInstance.destroy();
         }
+
+        adminChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data,
+                    borderColor: '#2a5298',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#2a5298',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] },
+                        ticks: {
+                            callback: function(value) {
+                                if(value >= 1000000) return (value / 1000000).toFixed(1) + ' Tr';
+                                if(value >= 1000) return (value / 1000).toFixed(0) + ' k';
+                                return value;
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+    }
+
+    function updateAdminChart(filter) {
+        fetch(`/Admin/GetAdminChartData?filter=${filter}`)
+            .then(response => response.json())
+            .then(res => {
+                if(res.success) {
+                    document.getElementById('adminChartTitle').innerHTML = `<i class="bi bi-graph-up text-primary me-2"></i>${res.title}`;
+                    initChart(res.labels, res.data);
+                }
+            })
+            .catch(error => console.error("Error fetching chart data:", error));
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Load default chart for "Tổng doanh thu" (yearly)
+        updateAdminChart('total');
     });
 </script>

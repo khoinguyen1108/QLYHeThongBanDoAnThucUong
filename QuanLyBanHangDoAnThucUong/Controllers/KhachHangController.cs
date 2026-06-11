@@ -168,7 +168,7 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 else if (status == "da-xac-nhan") query = query.Where(d => d.TrangThaiDonHang == "Đã xác nhận");
                 else if (status == "dang-chuan-bi") query = query.Where(d => d.TrangThaiDonHang == "Đang chuẩn bị");
                 else if (status == "dang-giao") query = query.Where(d => d.TrangThaiDonHang == "Đang giao");
-                else if (status == "hoan-thanh") query = query.Where(d => d.TrangThaiDonHang == "Hoàn thành");
+                else if (status == "hoan-thanh") query = query.Where(d => d.TrangThaiDonHang == "Hoàn thành" || d.TrangThaiDonHang == "Đã giao");
                 else if (status == "da-huy") query = query.Where(d => d.TrangThaiDonHang == "Đã hủy" || d.TrangThaiDonHang == "Từ chối");
             }
 
@@ -187,6 +187,12 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
             ViewBag.CurrentStatus = status;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
+
+            var reviewedItems = await _context.DanhGiaMonAns
+                .Where(d => d.MaKH == khachHang.MaKH && d.MaDonHang != null)
+                .Select(d => d.MaDonHang.ToString() + "_" + d.MaMonAn.ToString())
+                .ToListAsync();
+            ViewBag.ReviewedItems = reviewedItems;
 
             return View(donHangs);
         }

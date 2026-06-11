@@ -1,4 +1,4 @@
-﻿@model List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>
+@model List<QuanLyBanHangDoAnThucUong.Models.Entities.DonHang>
 @{
     ViewData["Title"] = "Quản Lý Đơn Hàng";
 
@@ -84,7 +84,10 @@
                                                     </div>
                                                     <div class="small text-muted mb-2"><i class="bi bi-person me-1"></i>@item.KhachHang?.TenKH</div>
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="fw-bold text-success">@String.Format("{0:0,0}đ", item.ThanhTienKhachTra)</span>
+                                                        <div>
+                                                            <span class="fw-bold text-success">@String.Format("{0:0,0}đ", item.ThanhTienKhachTra)</span>
+                                                            <div class="small text-muted mt-1" style="font-size: 0.75rem;"><i class="bi bi-wallet2"></i> @item.PhuongThucThanhToan</div>
+                                                        </div>
                                                         @if (item.TrangThaiThanhToan == "Đã thanh toán")
                                                         {
                                                             <span class="badge bg-success-subtle text-success small">Đã TT</span>
@@ -104,6 +107,7 @@
                                                     <div class="data-time">@item.NgayTaoDon.ToString("dd/MM/yyyy HH:mm")</div>
                                                     <div class="data-total">@String.Format("{0:0,0}đ", item.ThanhTienKhachTra)</div>
                                                     <div class="data-payment">@item.TrangThaiThanhToan</div>
+                                                    <div class="data-payment-method">@item.PhuongThucThanhToan</div>
                                                     <div class="data-items">
                                                         @System.Text.Json.JsonSerializer.Serialize(item.ChiTietDonHangs.Select(ct => new {
                                                             name = ct.BienTheMonAn?.MonAn?.TenMon,
@@ -136,7 +140,10 @@
                                         <div class="p-4 border-bottom">
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <h4 class="fw-bold mb-0">Đơn hàng <span class="text-primary detail-id"></span></h4>
-                                                <span class="badge bg-secondary detail-payment"></span>
+                                                <div>
+                                                    <span class="badge bg-light text-dark border me-1 detail-method"></span>
+                                                    <span class="badge bg-secondary detail-payment"></span>
+                                                </div>
                                             </div>
                                             <div class="row small text-dark">
                                                 <div class="col-sm-6 mb-2">
@@ -170,6 +177,10 @@
                                                 <h4 class="mb-0 fw-bold text-success detail-total"></h4>
                                             </div>
                                             
+                                            <div id="unpaid-warning-@tab.Id" class="alert alert-danger d-none mb-3 small py-2">
+                                                <i class="bi bi-exclamation-circle-fill me-1"></i> Giao dịch trực tuyến chưa hoàn tất. Không thể tiếp tục xử lý đơn hàng!
+                                            </div>
+                                            
                                             <div class="d-flex gap-2 justify-content-end">
                                                 @if (tab.AllowCancel)
                                                 {
@@ -177,7 +188,7 @@
                                                 }
                                                 @if (!string.IsNullOrEmpty(tab.NextAction))
                                                 {
-                                                    <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm" onclick="updateOrderStatus(currentOrderId, '@tab.NextStatus')">@tab.NextAction</button>
+                                                    <button type="button" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm action-next-btn" onclick="updateOrderStatus(currentOrderId, '@tab.NextStatus')">@tab.NextAction</button>
                                                 }
                                             </div>
                                         </div>
@@ -250,6 +261,7 @@
             const time = dataDiv.find('.data-time').text();
             const total = dataDiv.find('.data-total').text();
             const payment = dataDiv.find('.data-payment').text();
+            const method = dataDiv.find('.data-payment-method').text();
             const reason = dataDiv.find('.data-reason').text();
             const items = JSON.parse(dataDiv.find('.data-items').text());
 
@@ -278,6 +290,19 @@
                 paymentBadge.removeClass('bg-secondary').addClass('bg-success');
             } else {
                 paymentBadge.removeClass('bg-success').addClass('bg-secondary');
+            }
+
+            detailView.find('.detail-method').text(method);
+
+            const warningDiv = detailView.find(`#unpaid-warning-${tabId}`);
+            const nextBtn = detailView.find('.action-next-btn');
+            
+            if (payment === 'Chưa thanh toán' && method !== 'Tiền mặt') {
+                warningDiv.removeClass('d-none');
+                nextBtn.addClass('d-none');
+            } else {
+                warningDiv.addClass('d-none');
+                nextBtn.removeClass('d-none');
             }
 
             // Bind items

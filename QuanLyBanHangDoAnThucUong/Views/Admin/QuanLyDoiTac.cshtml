@@ -1,4 +1,4 @@
-﻿@using QuanLyBanHangDoAnThucUong.Models.Entities
+@using QuanLyBanHangDoAnThucUong.Models.Entities
 @model List<DoiTac>
 
 @{
@@ -122,25 +122,25 @@
                             <h5 class="fw-bold text-dark mb-3 border-top pt-4"><i class="bi bi-cash-stack text-success me-2"></i>Doanh Thu</h5>
                             <div class="row mb-4">
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-primary text-white rounded-3 shadow-sm">
+                                    <div class="p-3 bg-primary text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('daily')">
                                         <div class="small text-white-50 fw-bold mb-1">HÔM NAY</div>
                                         <h5 class="fw-bold mb-0" id="rev-daily">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-success text-white rounded-3 shadow-sm">
+                                    <div class="p-3 bg-success text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('monthly')">
                                         <div class="small text-white-50 fw-bold mb-1">THÁNG NÀY</div>
                                         <h5 class="fw-bold mb-0" id="rev-monthly">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-warning text-dark rounded-3 shadow-sm">
+                                    <div class="p-3 bg-warning text-dark rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('yearly')">
                                         <div class="small text-dark text-opacity-75 fw-bold mb-1">NĂM NAY</div>
                                         <h5 class="fw-bold mb-0" id="rev-yearly">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-danger text-white rounded-3 shadow-sm">
+                                    <div class="p-3 bg-danger text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('total')">
                                         <div class="small text-white-50 fw-bold mb-1">TỔNG CỘNG</div>
                                         <h5 class="fw-bold mb-0" id="rev-total">0đ</h5>
                                     </div>
@@ -150,7 +150,7 @@
                             <!-- Chart Section -->
                             <div class="card bg-light border-0 rounded-4">
                                 <div class="card-body">
-                                    <h6 class="fw-bold text-muted mb-3">Biểu đồ doanh thu 7 ngày qua</h6>
+                                    <h6 class="fw-bold text-muted mb-3" id="partnerChartTitle">Biểu Đồ Doanh Thu</h6>
                                     <div style="height: 250px;">
                                         <canvas id="partnerRevenueChart"></canvas>
                                     </div>
@@ -159,6 +159,42 @@
 
                             <!-- Orders List Section -->
                             <h5 class="fw-bold text-dark mb-3 border-top pt-4 mt-4"><i class="bi bi-receipt text-primary me-2"></i>Danh Sách Đơn Hàng</h5>
+                            
+                            <!-- Filter Section -->
+                            <form id="orderFilterForm" class="row g-2 mb-3 bg-light p-3 rounded-3 border" onsubmit="event.preventDefault(); loadPartnerOrders(currentPartnerId, 1)">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control form-control-sm" id="searchOrderStr" placeholder="Tìm mã đơn, tên KH...">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control form-control-sm" id="tuNgayOrder" title="Từ ngày">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control form-control-sm" id="denNgayOrder" title="Đến ngày">
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" id="trangThaiOrder">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                        <option value="Đang chuẩn bị">Đang chuẩn bị</option>
+                                        <option value="Đang giao">Đang giao</option>
+                                        <option value="Đã giao">Đã giao</option>
+                                        <option value="Hoàn thành">Hoàn thành</option>
+                                        <option value="Đã hủy">Đã hủy</option>
+                                        <option value="Từ chối">Từ chối</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select form-select-sm" id="sortOrderOrder">
+                                        <option value="newest">Mới nhất</option>
+                                        <option value="price_asc">Giá thấp đến cao</option>
+                                        <option value="price_desc">Giá cao đến thấp</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-search"></i></button>
+                                </div>
+                            </form>
+
                             <div class="table-responsive bg-white rounded-3 shadow-sm border p-3">
                                 <table class="table table-hover align-middle mb-0" id="orders-table">
                                     <thead class="table-light">
@@ -263,8 +299,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let chartInstance = null;
+        let currentPartnerId = null;
 
         function loadPartnerDetails(id, elem) {
+            currentPartnerId = id;
             $('.partner-card').removeClass('active');
             $(elem).addClass('active');
 
@@ -359,11 +397,44 @@
             });
         }
 
+        function updatePartnerChart(filter) {
+            if (!currentPartnerId) return;
+            
+            let title = "Biểu Đồ Doanh Thu";
+            if(filter === 'daily') title = "Biểu Đồ Doanh Thu Hôm Nay";
+            if(filter === 'monthly') title = "Biểu Đồ Doanh Thu Tháng Này";
+            if(filter === 'yearly') title = "Biểu Đồ Doanh Thu Năm Nay";
+
+            $.ajax({
+                url: '/Admin/GetDoiTacChartData',
+                type: 'GET',
+                data: { maDoiTac: currentPartnerId, filter: filter },
+                success: function(res) {
+                    if(res.success) {
+                        $('#partnerChartTitle').text(title);
+                        renderChart(res.labels, res.data);
+                    }
+                }
+            });
+        }
+
         function loadPartnerOrders(id, page) {
+            if (!id) return;
+            
+            let data = { 
+                maDoiTac: id, 
+                page: page,
+                searchStr: $('#searchOrderStr').val(),
+                tuNgay: $('#tuNgayOrder').val(),
+                denNgay: $('#denNgayOrder').val(),
+                trangThai: $('#trangThaiOrder').val(),
+                sortOrder: $('#sortOrderOrder').val()
+            };
+
             $.ajax({
                 url: '/Admin/GetDoiTacOrders',
                 type: 'GET',
-                data: { maDoiTac: id, page: page },
+                data: data,
                 success: function(res) {
                     if(res.success) {
                         let tbody = $('#orders-tbody');

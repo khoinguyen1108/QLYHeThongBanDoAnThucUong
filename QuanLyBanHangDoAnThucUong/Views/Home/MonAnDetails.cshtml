@@ -197,7 +197,7 @@
                     <nav id="reviewPagination" class="mb-5"></nav>
 
                     <!-- Form viết đánh giá -->
-                    @if (Context.Session.GetInt32("MaKH") != null)
+                    @if (ViewBag.CanReview == true)
                     {
                         <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm border border-light mt-2">
                             <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-pencil-square text-primary me-2"></i>Viết đánh giá của bạn</h5>
@@ -506,6 +506,7 @@
         $('#btnSubmitReview').on('click', function() {
             const star = parseInt($('#selectedStar').val());
             const content = $('#reviewContent').val().trim();
+            const availableOrderId = @(ViewBag.AvailableOrderId != null ? ViewBag.AvailableOrderId.ToString() : "null");
 
             if (star === 0) { Swal.fire('Thông báo', 'Vui lòng chọn số sao.', 'warning'); return; }
 
@@ -513,11 +514,15 @@
             btn.prop('disabled', true);
             btn.html('<i class="spinner-border spinner-border-sm me-1"></i>Đang xử lý...');
 
+            const requestData = { maMonAn: maMonAn, soSao: star, noiDung: content };
+            if (availableOrderId) {
+                requestData.maDonHang = availableOrderId;
+            }
+
             $.ajax({
                 url: '/Home/ThemDanhGia',
                 type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ maMonAn: maMonAn, soSao: star, noiDung: content }),
+                data: requestData,
                 success: function(res) {
                     if (res.requireLogin) { window.location.href = '/Account/DangNhap'; return; }
                     if (res.success) {
