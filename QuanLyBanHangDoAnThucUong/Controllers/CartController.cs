@@ -309,6 +309,11 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                     }
 
                     var thanhTienCuoi = TongTienMon - GiamGia + phiGiaoHangMotQuan;
+                    
+                    // Tính phí dịch vụ sàn (15% trên Tổng Doanh Thu - Tức là tổng số tiền khách trả)
+                    decimal phiDichVuSan = Math.Round(thanhTienCuoi * 0.15m, 0);
+                    // Quán nhận = Tổng Doanh Thu - Phí DV Sàn
+                    decimal thanhTienQuanNhan = thanhTienCuoi - phiDichVuSan;
 
                     // 1. Tạo đơn hàng
                     var donHang = new DonHang
@@ -319,6 +324,8 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                         TongTienMon = TongTienMon,
                         GiamGia = GiamGia,
                         PhiShip = phiGiaoHangMotQuan,
+                        PhiDichVuSan = phiDichVuSan,
+                        ThanhTienQuanNhan = thanhTienQuanNhan,
                         ThanhTienKhachTra = thanhTienCuoi,
                         TrangThaiDonHang = "Chờ xác nhận",
                         NgayTaoDon = DateTime.Now,

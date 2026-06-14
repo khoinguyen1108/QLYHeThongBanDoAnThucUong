@@ -116,7 +116,7 @@
         <div class="row mb-4">
             <!-- Thống kê doanh thu -->
             <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card" style="cursor: pointer;" onclick="filterByRevenueBox('daily')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="bg-success bg-opacity-10 p-3 rounded-3 flex-shrink-0">
@@ -143,7 +143,7 @@
             </div>
 
             <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card" style="cursor: pointer;" onclick="filterByRevenueBox('monthly')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="bg-info bg-opacity-10 p-3 rounded-3 flex-shrink-0">
@@ -170,7 +170,7 @@
             </div>
             
             <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card" style="cursor: pointer;" onclick="filterByRevenueBox('yearly')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="bg-primary bg-opacity-10 p-3 rounded-3 flex-shrink-0">
@@ -197,7 +197,7 @@
             </div>
 
             <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card">
+                <div class="card border-0 shadow-sm rounded-4 bg-white h-100 hover-card" style="cursor: pointer;" onclick="filterByRevenueBox('total')">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="bg-warning bg-opacity-10 p-3 rounded-3 flex-shrink-0">
@@ -299,3 +299,39 @@
     .bg-danger.bg-opacity-10 { background-color: rgba(220, 53, 69, 0.1) !important; }
 </style>
 
+@section Scripts {
+    <script>
+        function filterByRevenueBox(filter) {
+            let today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
+            
+            let tuNgay = '';
+            let denNgay = '';
+            
+            if(filter === 'daily') {
+                tuNgay = localISOTime;
+                denNgay = localISOTime;
+            } else if(filter === 'monthly') {
+                let y = today.getFullYear();
+                let m = (today.getMonth() + 1).toString().padStart(2, '0');
+                tuNgay = `${y}-${m}-01`;
+                let lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+                denNgay = `${y}-${m}-${lastDay.toString().padStart(2, '0')}`;
+            } else if(filter === 'yearly') {
+                let y = today.getFullYear();
+                tuNgay = `${y}-01-01`;
+                denNgay = `${y}-12-31`;
+            } else if(filter === 'total') {
+                tuNgay = '';
+                denNgay = '';
+            }
+
+            document.querySelector('input[name="fromDate"]').value = tuNgay;
+            document.querySelector('input[name="toDate"]').value = denNgay;
+            
+            // Submit form
+            document.querySelector('form[action="/QuanLyGianHang/DoanhThu"]').submit();
+        }
+    </script>
+}

@@ -122,37 +122,27 @@
                             <h5 class="fw-bold text-dark mb-3 border-top pt-4"><i class="bi bi-cash-stack text-success me-2"></i>Doanh Thu</h5>
                             <div class="row mb-4">
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-primary text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('daily')">
+                                    <div class="p-3 bg-primary text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="filterOrdersByRevenueBox('daily')">
                                         <div class="small text-white-50 fw-bold mb-1">HÔM NAY</div>
                                         <h5 class="fw-bold mb-0" id="rev-daily">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-success text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('monthly')">
+                                    <div class="p-3 bg-success text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="filterOrdersByRevenueBox('monthly')">
                                         <div class="small text-white-50 fw-bold mb-1">THÁNG NÀY</div>
                                         <h5 class="fw-bold mb-0" id="rev-monthly">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-warning text-dark rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('yearly')">
-                                        <div class="small text-dark text-opacity-75 fw-bold mb-1">NĂM NAY</div>
+                                    <div class="p-3 bg-warning text-dark rounded-3 shadow-sm" style="cursor: pointer;" onclick="filterOrdersByRevenueBox('yearly')">
+                                        <div class="small text-black-50 fw-bold mb-1">NĂM NAY</div>
                                         <h5 class="fw-bold mb-0" id="rev-yearly">0đ</h5>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="p-3 bg-danger text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="updatePartnerChart('total')">
+                                    <div class="p-3 bg-danger text-white rounded-3 shadow-sm" style="cursor: pointer;" onclick="filterOrdersByRevenueBox('total')">
                                         <div class="small text-white-50 fw-bold mb-1">TỔNG CỘNG</div>
                                         <h5 class="fw-bold mb-0" id="rev-total">0đ</h5>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Chart Section -->
-                            <div class="card bg-light border-0 rounded-4">
-                                <div class="card-body">
-                                    <h6 class="fw-bold text-muted mb-3" id="partnerChartTitle">Biểu Đồ Doanh Thu</h6>
-                                    <div style="height: 250px;">
-                                        <canvas id="partnerRevenueChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -296,9 +286,7 @@
 </style>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let chartInstance = null;
         let currentPartnerId = null;
 
         function loadPartnerDetails(id, elem) {
@@ -349,9 +337,6 @@
                         $('#rev-yearly').text(res.revenue.yearly.toLocaleString('vi-VN') + 'đ');
                         $('#rev-total').text(res.revenue.total.toLocaleString('vi-VN') + 'đ');
 
-                        // Render Chart
-                        renderChart(res.chartData.labels, res.chartData.data);
-
                         // Load Orders List
                         loadPartnerOrders(id, 1);
                     }
@@ -359,63 +344,41 @@
             });
         }
 
-        function renderChart(labels, data) {
-            const ctx = document.getElementById('partnerRevenueChart').getContext('2d');
-            
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Doanh thu',
-                        data: data,
-                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    if (value >= 1000000) return (value / 1000000) + 'M';
-                                    if (value >= 1000) return (value / 1000) + 'K';
-                                    return value;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updatePartnerChart(filter) {
+        function filterOrdersByRevenueBox(filter) {
             if (!currentPartnerId) return;
             
-            let title = "Biểu Đồ Doanh Thu";
-            if(filter === 'daily') title = "Biểu Đồ Doanh Thu Hôm Nay";
-            if(filter === 'monthly') title = "Biểu Đồ Doanh Thu Tháng Này";
-            if(filter === 'yearly') title = "Biểu Đồ Doanh Thu Năm Nay";
+            let today = new Date();
+            const offset = today.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
+            
+            let tuNgay = '';
+            let denNgay = '';
+            
+            if(filter === 'daily') {
+                tuNgay = localISOTime;
+                denNgay = localISOTime;
+            } else if(filter === 'monthly') {
+                let y = today.getFullYear();
+                let m = (today.getMonth() + 1).toString().padStart(2, '0');
+                tuNgay = `${y}-${m}-01`;
+                let lastDay = new Date(y, today.getMonth() + 1, 0).getDate();
+                denNgay = `${y}-${m}-${lastDay.toString().padStart(2, '0')}`;
+            } else if(filter === 'yearly') {
+                let y = today.getFullYear();
+                tuNgay = `${y}-01-01`;
+                denNgay = `${y}-12-31`;
+            } else if(filter === 'total') {
+                tuNgay = '';
+                denNgay = '';
+            }
 
-            $.ajax({
-                url: '/Admin/GetDoiTacChartData',
-                type: 'GET',
-                data: { maDoiTac: currentPartnerId, filter: filter },
-                success: function(res) {
-                    if(res.success) {
-                        $('#partnerChartTitle').text(title);
-                        renderChart(res.labels, res.data);
-                    }
-                }
-            });
+            $('#tuNgayOrder').val(tuNgay);
+            $('#denNgayOrder').val(denNgay);
+            $('#searchOrderStr').val('');
+            $('#trangThaiOrder').val('');
+            $('#sortOrderOrder').val('newest');
+            
+            loadPartnerOrders(currentPartnerId, 1);
         }
 
         function loadPartnerOrders(id, page) {

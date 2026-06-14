@@ -30,8 +30,8 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
 
             var dashboard = new
             {
-                TongDoiTac = await _context.DoiTacs.CountAsync(),
-                TongGianHang = await _context.GianHangs.CountAsync(),
+                TongDoiTac = await _context.DoiTacs.CountAsync(),// Fixed: Đếm số đối tác thay vì tài khoản có vai trò đối tác
+                TongGianHang = await _context.GianHangs.CountAsync(), // Fixed: Đếm số gian hàng thay vì tài khoản có vai trò đối tác 
                 TongMonAn = await _context.MonAns.CountAsync(),
                 TongKhachHang = await _context.KhachHangs.CountAsync(),
                 TongDonHang = await _context.DonHangs.CountAsync(), // Fixed
@@ -1153,10 +1153,10 @@ namespace QuanLyBanHangDoAnThucUong.Controllers
                 ngayTao = d.NgayTaoDon.ToString("dd/MM/yyyy HH:mm"),
                 tongTienMon = d.TongTienMon,
                 giamGia = d.GiamGia,
-                phiDichVuSan = d.PhiDichVuSan,
+                phiDichVuSan = d.PhiDichVuSan > 0 ? d.PhiDichVuSan : Math.Round(d.ThanhTienKhachTra * 0.15m, 0),
                 phiShip = d.PhiShip,
                 thanhTienKhachTra = d.ThanhTienKhachTra,
-                thanhTienQuanNhan = d.ThanhTienQuanNhan
+                thanhTienQuanNhan = d.ThanhTienQuanNhan > 0 ? d.ThanhTienQuanNhan : (d.ThanhTienKhachTra - Math.Round(d.ThanhTienKhachTra * 0.15m, 0))
             }).ToList();
 
             return Json(new { draw = draw, recordsFiltered = recordsTotal, recordsTotal = recordsTotal, data = data });
